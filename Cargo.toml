@@ -1,0 +1,18 @@
+[package]
+name = "opengl_sb7_rs"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+glfw = "^0.43.0"
+gl = "^0.14.0"
+
+[[bin]]
+name = "ch2"
+path = "ch2/main.rs"
+
+[[bin]]
+name = "ch3"
+path = "ch3/main.rs"
