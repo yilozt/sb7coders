@@ -1,5 +1,5 @@
 [package]
-name = "opengl_sb7_rs"
+name = "sb7"
 version = "0.1.0"
 edition = "2021"
 
@@ -14,5 +14,21 @@ name = "ch2"
 path = "ch2/main.rs"
 
 [[bin]]
-name = "ch3"
-path = "ch3/main.rs"
+name = "1_vertexattr"
+path = "ch3/1_vertexattr.rs"
+
+[[bin]]
+name = "2_transdata"
+path = "ch3/2_transdata.rs"
+
+[[bin]]
+name = "3_interfaceblk"
+path = "ch3/3_interfaceblk.rs"
+
+[[bin]]
+name = "4_tessellatedtri"
+path = "ch3/4_tessellatedtri.rs"
+
+[[bin]]
+name = "5_geometry"
+path = "ch3/5_geometry.rs"

@@ -117,20 +117,20 @@ dependencies = [
 ]
 
 [[package]]
-name = "opengl_sb7_rs"
-version = "0.1.0"
-dependencies = [
- "gl",
- "glfw",
-]
-
-[[package]]
 name = "raw-window-handle"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fba75eee94a9d5273a68c9e1e105d9cffe1ef700532325788389e5a83e2522b7"
 dependencies = [
  "cty",
+]
+
+[[package]]
+name = "sb7"
+version = "0.1.0"
+dependencies = [
+ "gl",
+ "glfw",
 ]
 
 [[package]]

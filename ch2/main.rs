@@ -1,7 +1,7 @@
 use std::{ffi::CString, ptr};
 
 use gl::types::*;
-use opengl_sb7_rs::sb7::application::Application;
+use sb7::application::Application;
 
 #[derive(Default)]
 struct MyApplication {
