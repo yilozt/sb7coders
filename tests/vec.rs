@@ -37,4 +37,6 @@ fn test_ops() {
   assert_eq!(vec3!(1.0, 2.0, 3.0) * 2.0, vec3!(2.0, 4.0, 6.0));
 
   assert_eq!(vec3!(1, 1, 1).length(), 3.0f32.sqrt());
+
+  assert_eq!(vec3!(1.0f64, 0.0, 0.0).normalize(), vec3!(1.0, 0.0, 0.0));
 }

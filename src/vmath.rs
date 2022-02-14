@@ -349,35 +349,22 @@ where
 pub fn rotate_with_axis<T>(angle: T, x: T, y: T, z: T) -> TMat4<T>
 where
   T: Mul<T, Output = T> + Add<T, Output = T> + Sub<T, Output = T> + Default + Copy + From<f32>,
-  f32: From<T>,
+  f64: From<T>,
 {
   let x2 = x * x;
   let y2 = y * y;
   let z2 = z * z;
-  let rads = f32::from(angle) * 0.0174532925f32;
+  let rads = (f64::from(angle) * 0.0174532925) as f32;
   let c = rads.cos();
   let s = rads.sin();
   let omc = 1.0 - c;
 
-  let m: MatNM<T, 4, 4> = MatNM::new(&[
-    x2 * (omc + c).into(),
-    y * x * omc.into() + z * s.into(),
-    x * z * omc.into() - y * s.into(),
-    0.0.into(),
-    x * y * omc.into() - z * s.into(),
-    y2 * omc.into() + c.into(),
-    y * z * omc.into() + x * s.into(),
-    0.0.into(),
-    x * z * omc.into() + y * s.into(),
-    y * z * omc.into() - x * s.into(),
-    z2 * omc.into() + c.into(),
-    0.0.into(),
-    0.0.into(),
-    0.0.into(),
-    0.0.into(),
-    1.0.into(),
-  ]);
-  m
+  TMat4 { a: [
+    TVec4 {a: [ x2 * omc.into() + c.into(), y * x * omc.into() + z * s.into(), x * z * omc.into() - y * s.into(), 0.0.into() ]},
+    TVec4 {a: [ x * y * omc.into() - z * s.into(), y2 * omc.into() + c.into(), y * z * omc.into() + x * s.into(), 0.0.into() ]},
+    TVec4 {a: [ x * z * omc.into() + y * s.into(), y * z * omc.into() - x * s.into(), z2 * omc.into() + c.into(), 0.0.into() ]},
+    TVec4 {a: [ 0.0.into(), 0.0.into(), 0.0.into(), 1.0.into(), ]},
+  ] }
 }
 
 #[rustfmt::skip]
@@ -392,7 +379,7 @@ where
     + From<f32>
     + From<u8>,
   TMat4<T>: Mul<TMat4<T>, Output = TMat4<T>>,
-  f32: From<T>,
+  f64: From<T>,
 {
     rotate_with_axis::<T>(angle_z, T::from(0.0), T::from(0.0), T::from(1.0))
   * rotate_with_axis::<T>(angle_y, T::from(0.0), T::from(1.0), T::from(0.0))
@@ -462,16 +449,30 @@ pub fn frustum(left: f32, right: f32, bottom: f32, top: f32, n: f32, f: f32) -> 
 /// aspect: in degress
 #[inline(always)]
 #[rustfmt::skip]
-pub fn perspective(fovy: f32, aspect: f32, n: f32, f: f32) -> Mat4 {
-  let q = 1.0 / (0.5 * fovy).tan();
+pub fn perspective<T>(fovy: T, aspect: T, n: T, f: T) -> TMat4<T> 
+where   f64: From<T>,
+T: Div<Output = T>
+  + Add<Output = T>
+  + Mul<Output = T>
+  + Sub<Output = T>
+  + Neg<Output = T>
+  + Default
+  + Copy
+  + From<f32> + From<u8>,
+f64: From<T>
+{
+  let q = 1.0 / (0.5 * f64::from(fovy).to_radians()).tan();
+  let q: T = (q as f32).into();
   let a = q / aspect;
   let b = (n + f) / (n - f);
-  let c = (2.0 * n * f) / (n - f);
+  let c = (T::from(2.0) * n * f) / (n - f);
 
-  mat4![a  , 0.0, 0.0, 0.0,
-        0.0, q  , 0.0, 0.0,
-        0.0, 0.0, b  , -1.0,
-        0.0, 0.0, c  , 0.0]
+  let mut result = mat4!();
+  result[0].a =  [a  , 0.0.into(), 0.0.into(), 0.0.into()];
+  result[1].a =  [ 0.0.into(), q  , 0.0.into(), 0.0.into()];
+  result[2].a =  [ 0.0.into(), 0.0.into(), b  , (-1.0).into()];
+  result[3].a =  [ 0.0.into(), 0.0.into(), c  , 0.0.into()];
+  result
 }
 
 #[inline(always)]

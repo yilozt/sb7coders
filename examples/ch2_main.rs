@@ -114,7 +114,7 @@ impl Application for MyApplication {
     }
   }
 
-  fn shutdown(&self) {
+  fn shutdown(&mut self) {
     unsafe {
       gl::DeleteVertexArrays(1, &self.vertex_array_object);
       gl::DeleteProgram(self.rendering_program);

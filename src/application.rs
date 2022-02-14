@@ -1,18 +1,16 @@
 use glfw::{Action, Context, Key};
 
 pub struct AppConfig {
-  pub title: String,
-  pub width: usize,
+  pub title:  String,
+  pub width:  usize,
   pub height: usize,
 }
 
 impl Default for AppConfig {
   fn default() -> Self {
-    Self {
-      title: String::from("OpenGL SuperBible Example"),
-      width: 800,
-      height: 600,
-    }
+    Self { title:  String::from("OpenGL SuperBible Example"),
+           width:  800,
+           height: 600, }
   }
 }
 
@@ -28,9 +26,9 @@ pub trait Application {
 
     let AppConfig { title, width, height } = self.init();
 
-    let (mut window, events) = glfw
-      .create_window(width as u32, height as u32, &title, glfw::WindowMode::Windowed)
-      .expect("Failed to create GLFW window.");
+    let (mut window, events) =
+      glfw.create_window(width as u32, height as u32, &title, glfw::WindowMode::Windowed)
+          .expect("Failed to create GLFW window.");
     gl::load_with(|s| window.get_proc_address(s));
 
     unsafe {
@@ -46,7 +44,7 @@ pub trait Application {
     while !window.should_close() {
       glfw.poll_events();
       for (_, event) in glfw::flush_messages(&events) {
-        handle_window_event(&mut window, event);
+        self.handle_window_event(&mut window, event);
       }
 
       self.render(glfw.get_time());
@@ -64,13 +62,25 @@ pub trait Application {
       gl::ClearBufferfv(gl::COLOR, 0, [g, g, g, 1.0f32].as_ptr());
     }
   }
-  fn shutdown(&self) {}
-}
+  fn shutdown(&mut self) {}
 
-fn handle_window_event(window: &mut glfw::Window, event: glfw::WindowEvent) {
-  match event {
-    glfw::WindowEvent::Key(Key::Escape, _, Action::Press, _) => window.set_should_close(true),
-    glfw::WindowEvent::Size(w, h) => unsafe { gl::Viewport(0, 0, w, h) },
-    _ => {}
+  fn on_resize(&mut self, _w: i32, _h: i32) {}
+
+  fn on_key(&mut self, _key: Key, _press: Action) {}
+
+  fn handle_window_event(&mut self, window: &mut glfw::Window, event: glfw::WindowEvent) {
+    match event {
+      glfw::WindowEvent::Key(Key::Escape, _, Action::Press, _) => {
+        window.set_should_close(true)
+      }
+      glfw::WindowEvent::Key(key, _, action, _) => {
+        self.on_key(key, action);
+      }
+      glfw::WindowEvent::Size(w, h) => unsafe {
+        gl::Viewport(0, 0, w, h);
+        self.on_resize(w, h);
+      },
+      _ => {}
+    }
   }
 }
