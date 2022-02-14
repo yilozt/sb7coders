@@ -7,7 +7,7 @@ enum Obj {
 
 impl Obj {
   fn check_errors(self) {
-    unsafe {
+    super::gl! {
       use std::ptr::null_mut;
       use Obj::{Program, Shader};
       let mut success = gl::FALSE as _;
@@ -45,7 +45,7 @@ impl Display for Obj {
     match &self {
       Obj::Shader(s) => {
         let mut shader_type = 0;
-        unsafe {
+        super::gl! {
           gl::GetShaderiv(*s, gl::SHADER_TYPE, &mut shader_type);
         }
 
@@ -74,7 +74,7 @@ pub mod shader {
   }
 
   pub fn from_str(source: &str, shader_type: u32, check_errors: bool) -> u32 {
-    unsafe {
+    crate::gl! {
       let shader = gl::CreateShader(shader_type);
       let source = CString::new(source).unwrap();
       gl::ShaderSource(shader, 1, &source.as_ptr(), std::ptr::null());
@@ -93,7 +93,7 @@ pub mod program {
   use super::*;
 
   pub fn link_from_shaders(shaders: &[u32], delete_shaders: bool) -> u32 {
-    unsafe {
+    crate::gl! {
       let program = gl::CreateProgram();
       for &shader in shaders {
         gl::AttachShader(program, shader);

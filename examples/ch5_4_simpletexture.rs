@@ -2,6 +2,7 @@ use std::{ffi::CString, ptr::{null, null_mut}};
 
 use sb7::application::*;
 use gl::*;
+use sb7::gl;
 
 #[derive(Default)]
 struct App {
@@ -26,7 +27,7 @@ impl App {
   fn log_info(&self, obj: u32, log_type: u32) {
     let mut buf = [0u8; 2048];
 
-    unsafe {
+    gl! {
       match log_type {
         COMPILE_STATUS => GetShaderInfoLog(obj, 2048, null_mut(), buf.as_mut_ptr() as _),
         LINK_STATUS => GetProgramInfoLog(obj, 2048, null_mut(), buf.as_mut_ptr() as _),
@@ -42,7 +43,7 @@ impl App {
 
 impl Application for App {
   fn startup(&mut self) {
-    unsafe {
+    gl! {
       let mut texture = 0;
 
       // 创建纹理
@@ -96,7 +97,7 @@ impl Application for App {
     ";
     let fs_src = CString::new(fs_src).unwrap();
     
-    unsafe {
+    gl! {
       let vs = CreateShader(VERTEX_SHADER);
       ShaderSource(vs, 1, &vs_src.as_ptr(), null());
       CompileShader(vs);
@@ -120,7 +121,7 @@ impl Application for App {
       self.prog = prog;
     }
 
-    unsafe {
+    gl! {
       let mut vao = 0;
       CreateVertexArrays(1, &mut vao);
       BindVertexArray(vao);
@@ -129,14 +130,14 @@ impl Application for App {
   }
 
   fn render(&self, _current_time: f64) {
-    unsafe {
+    gl! {
       ClearBufferfv(COLOR, 0, [0.0f32, 0.25, 0.0, 1.0].as_ptr());
       DrawArrays(TRIANGLES, 0, 3);
     }
   }
 
   fn shutdown(&mut self) {
-    unsafe {
+    gl! {
       DeleteProgram(self.prog);
       DeleteTextures(1, &self.texture);  
       DeleteVertexArrays(1, &self.vao);

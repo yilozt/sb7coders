@@ -60,7 +60,7 @@ impl Application for MyApp {
     )
     .unwrap();
 
-    unsafe {
+    sb7::gl! {
       self.program = gl::CreateProgram();
 
       let vs = gl::CreateShader(gl::VERTEX_SHADER);
@@ -86,14 +86,14 @@ impl Application for MyApp {
 
   fn render(&self, _current_time: f64) {
     let color = [0.0, 0.0, 0.0, 0.0];
-    unsafe {
+    sb7::gl! {
       gl::ClearBufferfv(gl::COLOR, 0, color.as_ptr());
       gl::DrawArrays(gl::TRIANGLES, 0, 3);
     }
   }
 
   fn shutdown(&mut self) {
-    unsafe {
+    sb7::gl! {
       gl::DeleteProgram(self.program);
       gl::DeleteVertexArrays(1, &self.vao);
     }

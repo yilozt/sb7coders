@@ -67,7 +67,7 @@ impl Application for App {
       -0.25,  0.25, -0.25
     ];
 
-    unsafe {
+    sb7::gl! {
       let mut vao = 0;
       gl::CreateVertexArrays(1, &mut vao);
       gl::BindVertexArray(vao);
@@ -138,7 +138,7 @@ impl Application for App {
   }
 
   fn render(&self, current_time: f64) {
-    unsafe {
+    sb7::gl! {
       gl::ClearBufferfv(gl::COLOR,0, [0.0, 0.0, 0.0].as_ptr());
       gl::ClearBufferfv(gl::DEPTH, 0, &1.0);
 
@@ -163,13 +163,13 @@ impl Application for App {
   fn on_resize(&mut self, w: i32, h: i32) {
     let aspect = w as GLfloat / h as GLfloat;
     self.proj_matrix = sb7::vmath::perspective(50.0, aspect, 0.1, 1000.0);
-    unsafe {
+    sb7::gl! {
       gl::UniformMatrix4fv(1, 1, gl::FALSE, addr_of!(self.proj_matrix) as _);
     }
   }
 
   fn shutdown(&mut self) {
-    unsafe {
+    sb7::gl! {
       gl::DeleteBuffers(2, &self.buf);
       gl::DeleteProgram(self.program);
       gl::DeleteVertexArrays(1, &self.vao);

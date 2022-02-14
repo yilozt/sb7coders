@@ -90,19 +90,36 @@ impl Error for OpenErr
   }
 }
 
+trait LoadHeader: std::io::Read {
+  #[inline(always)]
+  fn load_header(&mut self) -> Result<Header, OpenErr> {
+    use OpenErr::*;
+    let mut buf = [0u8; size_of::<Header>()];
+    self.read(&mut buf[..]).map_err(IoErr)?;
+
+    unsafe { Ok((*(buf.as_ptr() as *const Header)).clone()) }
+  }
+}
+
+impl LoadHeader for std::fs::File {}
+
+struct Void(*const c_void);
+
+impl std::ops::Add<i32> for Void {
+  type Output = *const c_void;
+  #[inline(always)]
+  fn add(self, rhs: i32) -> Self::Output {
+    unsafe { (self.0).add(rhs as usize) }
+  }
+}
+
 pub fn load_with_tex(filename: &str, tex: u32) -> Result<KtxTex, OpenErr>
 {
   use OpenErr::*;
 
   let mut file = std::fs::File::open(filename).map_err(IoErr)?;
 
-  let mut h = unsafe
-  {
-    let mut buf = [0u8; size_of::<Header>()];
-    file.read(&mut buf[..]).map_err(IoErr)?;
-
-    (*(buf.as_ptr() as *const Header)).clone()
-  };
+  let mut h = file.load_header()?;
 
   if h.identifier != IDENTIFIER
   {
@@ -198,124 +215,97 @@ pub fn load_with_tex(filename: &str, tex: u32) -> Result<KtxTex, OpenErr>
     h.miplevels = 1;
   }
 
-  unsafe
+  use crate::gl;
+  let mut tex = tex;
+  if tex == 0
   {
-    let mut tex = tex;
-    if tex == 0
-    {
-      gl::GenTextures(1, &mut tex);
-    }
-
-    gl::BindTexture(target, tex);
-    
-    let data = data[..].as_ptr() as *const c_void;
-
-    match target
-    {
-      gl::TEXTURE_1D =>
-      {
-        gl::TexStorage1D(target, h.miplevels as _, h.glinternalformat, h.pixelwidth as _);
-        gl::TexSubImage1D(target, 0, 0, h.pixelwidth as _, h.glformat, h.glinternalformat, data);
-      },
-      gl::TEXTURE_2D =>
-      {
-        if h.gltype == gl::NONE
-        {
-          gl::CompressedTexImage2D(target, 0, h.glinternalformat, h.pixelwidth as _, h.pixelheight as _, 0, 420 * 380 / 2, data);
-        }
-        else
-        {
-          gl::TexStorage2D(target, h.miplevels as _, h.glinternalformat, h.pixelwidth as _, h.pixelheight as _);
-          {
-            let mut ptr = data as *const u8;
-            let mut height = h.pixelheight as i32;
-            let mut width = h.pixelwidth as i32;
-            gl::PixelStorei(gl::UNPACK_ALIGNMENT, 1);
-            for i in 0..h.miplevels
-            {
-                gl::TexSubImage2D(gl::TEXTURE_2D, i as _, 0, 0, width, height, h.glformat, h.gltype, ptr as _);
-                ptr = ptr.add((height * calculate_stride(&h, width, 1)) as usize);
-                height >>= 1;
-                width >>= 1;
-                if height < 1 { height = 1; }
-                if width < 1  { width  = 1; }
-            }
-          }
-        }
-      },
-      gl::TEXTURE_3D =>
-      {
-        gl::TexStorage3D(target, h.miplevels as _, h.glinternalformat, h.pixelwidth as _, h.pixelheight as _, h.pixeldepth as _);
-        gl::TexSubImage3D(target, 0, 0, 0, 0, h.pixelwidth as _, h.pixelheight as _, h.pixeldepth as _, h.glformat, h.glinternalformat, data);
-      },
-      gl::TEXTURE_1D_ARRAY =>
-      {
-        gl::TexStorage2D(target, h.miplevels as _, h.glinternalformat, h.pixelwidth as _, h.arrayelements as _);
-        gl::TexSubImage2D(target, 0, 0, 0, h.pixelwidth as _, h.arrayelements as _, h.glformat, h.gltype, data);
-      },
-      gl::TEXTURE_2D_ARRAY =>
-      {
-        gl::TexStorage3D(target, h.miplevels as _, h.glinternalformat, h.pixelwidth as _, h.pixelheight as _, h.arrayelements as _);
-        gl::TexSubImage3D(target, 0, 0, 0, 0, h.pixelwidth as _, h.pixelheight as _, h.arrayelements as _, h.glformat, h.gltype, data);
-      },
-      gl::TEXTURE_CUBE_MAP =>
-      {
-        gl::TexStorage2D(target, h.miplevels as _, h.glinternalformat, h.pixelwidth as _, h.pixelheight as _);
-        // glTexSubImage3D(GL_TEXTURE_CUBE_MAP, 0, 0, 0, 0, h.pixelwidth, h.pixelheight, h.faces, h.glformat, h.gltype, data);
-        {
-          let face_size = calculate_face_size(&h);
-          for i in 0..h.faces
-          {
-            let data = (data as *const u8).add((face_size * i as i32) as usize);
-            gl::TexSubImage2D(gl::TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, 0, 0, h.pixelwidth as _, h.pixelheight as _, h.glformat, h.gltype, data as _);
-          }
-        }
-      },
-      gl::TEXTURE_CUBE_MAP_ARRAY =>
-      {
-        gl::TexStorage3D(target, h.miplevels as _, h.glinternalformat, h.pixelwidth as _, h.pixelheight as _, h.arrayelements as _);
-        gl::TexSubImage3D(target, 0, 0, 0, 0, h.pixelwidth as _, h.pixelheight as _, (h.faces * h.arrayelements) as _, h.glformat, h.gltype, data);
-      },
-      _ => return Err(UnSupportedTargetErr)
-    }
-
-    if h.miplevels == 1
-    {
-      gl::GenerateMipmap(target);
-    }
-
-    Ok(KtxTex(tex, h))
+    gl! { gl::GenTextures(1, &mut tex); }
   }
+
+  gl! { gl::BindTexture(target, tex); }
+  
+  let data = data[..].as_ptr() as *const c_void;
+
+  match target
+  {
+    gl::TEXTURE_1D =>
+    gl!{
+      gl::TexStorage1D(target, h.miplevels as _, h.glinternalformat, h.pixelwidth as _);
+      gl::TexSubImage1D(target, 0, 0, h.pixelwidth as _, h.glformat, h.glinternalformat, data);
+    },
+    gl::TEXTURE_2D =>
+    {
+      if h.gltype == gl::NONE
+      {
+        gl!(gl::CompressedTexImage2D(target, 0, h.glinternalformat, h.pixelwidth as _, h.pixelheight as _, 0, 420 * 380 / 2, data));
+      }
+      else
+      {
+        gl!(gl::TexStorage2D(target, h.miplevels as _, h.glinternalformat, h.pixelwidth as _, h.pixelheight as _));
+        {
+          let mut ptr = data;
+          let mut height = h.pixelheight as i32;
+          let mut width = h.pixelwidth as i32;
+          gl!(gl::PixelStorei(gl::UNPACK_ALIGNMENT, 1));
+          for i in 0..h.miplevels
+          {
+              gl!(gl::TexSubImage2D(gl::TEXTURE_2D, i as _, 0, 0, width, height, h.glformat, h.gltype, ptr));
+              ptr = Void(ptr) + height * calculate_stride(&h, width, 1);
+              height >>= 1;
+              width >>= 1;
+              if height < 1 { height = 1; }
+              if width < 1  { width  = 1; }
+          }
+        }
+      }
+    },
+    gl::TEXTURE_3D =>
+    gl!{
+      gl::TexStorage3D(target, h.miplevels as _, h.glinternalformat, h.pixelwidth as _, h.pixelheight as _, h.pixeldepth as _);
+      gl::TexSubImage3D(target, 0, 0, 0, 0, h.pixelwidth as _, h.pixelheight as _, h.pixeldepth as _, h.glformat, h.glinternalformat, data);
+    },
+    gl::TEXTURE_1D_ARRAY =>
+    gl!{
+      gl::TexStorage2D(target, h.miplevels as _, h.glinternalformat, h.pixelwidth as _, h.arrayelements as _);
+      gl::TexSubImage2D(target, 0, 0, 0, h.pixelwidth as _, h.arrayelements as _, h.glformat, h.gltype, data);
+    },
+    gl::TEXTURE_2D_ARRAY =>
+    gl!{
+      gl::TexStorage3D(target, h.miplevels as _, h.glinternalformat, h.pixelwidth as _, h.pixelheight as _, h.arrayelements as _);
+      gl::TexSubImage3D(target, 0, 0, 0, 0, h.pixelwidth as _, h.pixelheight as _, h.arrayelements as _, h.glformat, h.gltype, data);
+    },
+    gl::TEXTURE_CUBE_MAP =>
+    {
+      gl!(gl::TexStorage2D(target, h.miplevels as _, h.glinternalformat, h.pixelwidth as _, h.pixelheight as _));
+      // glTexSubImage3D(GL_TEXTURE_CUBE_MAP, 0, 0, 0, 0, h.pixelwidth, h.pixelheight, h.faces, h.glformat, h.gltype, data);
+      {
+        let face_size = calculate_face_size(&h);
+        for i in 0..h.faces
+        {
+          let data = Void(data) + face_size * i as i32;
+          gl!(gl::TexSubImage2D(gl::TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, 0, 0, h.pixelwidth as _, h.pixelheight as _, h.glformat, h.gltype, data as _));
+        }
+      }
+    },
+    gl::TEXTURE_CUBE_MAP_ARRAY =>
+    gl!{
+      gl::TexStorage3D(target, h.miplevels as _, h.glinternalformat, h.pixelwidth as _, h.pixelheight as _, h.arrayelements as _);
+      gl::TexSubImage3D(target, 0, 0, 0, 0, h.pixelwidth as _, h.pixelheight as _, (h.faces * h.arrayelements) as _, h.glformat, h.gltype, data);
+    },
+    _ => return Err(UnSupportedTargetErr)
+  }
+
+  if h.miplevels == 1
+  {
+    gl!(gl::GenerateMipmap(target));
+  }
+
+  Ok(KtxTex(tex, h))
 }
 
 #[inline(always)]
 pub fn load(filename: &str) -> Result<KtxTex, OpenErr> {
   load_with_tex(filename, 0)
 }
-
-/* 
-pub fn save(filename: &str, target: u32, tex: u32) -> bool {
-  let mut h = Header::default();
-
-  h.endianness = 0x04030201;
-  h.identifier = IDENTIFIER;
-
-  unsafe {
-    gl::BindTexture(target, tex);
-
-    let (mut width, mut height, mut depth) = (0i32, 0i32, 0i32);
-
-    gl::GetTexLevelParameteriv(target, 0, gl::TEXTURE_WIDTH, &mut width);
-    gl::GetTexLevelParameteriv(target, 0, gl::TEXTURE_HEIGHT, &mut height);
-    gl::GetTexLevelParameteriv(target, 0, gl::TEXTURE_DEPTH, &mut depth);  
-    
-    h.pixelwidth  = width as _;
-    h.pixelheight = height as _;
-    h.pixeldepth  = depth as _;
-  }
-
-  true
-}
-*/
 
 }

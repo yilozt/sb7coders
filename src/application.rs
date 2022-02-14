@@ -31,7 +31,7 @@ pub trait Application {
           .expect("Failed to create GLFW window.");
     gl::load_with(|s| window.get_proc_address(s));
 
-    unsafe {
+    super::gl! {
       gl::Viewport(0, 0, width as i32, height as i32);
     }
 
@@ -57,7 +57,7 @@ pub trait Application {
 
   fn startup(&mut self) {}
   fn render(&self, current_time: f64) {
-    unsafe {
+    super::gl! {
       let g = (current_time.sin() * 0.5 + 0.5) as f32;
       gl::ClearBufferfv(gl::COLOR, 0, [g, g, g, 1.0f32].as_ptr());
     }

@@ -19,7 +19,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-use std::{io::Read, mem::size_of, ptr::{null, addr_of}};
+use std::{io::Read, mem::size_of, ptr::null};
 
 pub mod sb6m {
   macro_rules! fourcc {
@@ -134,11 +134,6 @@ pub mod sb6m {
   }
 }
 
-#[inline(always)]
-fn ptr<T>(c: &T) -> *const u8 {
-  c as *const T as *const u8
-}
-
 #[derive(Default)]
 pub struct Object {
   data_buf:        u32,
@@ -172,7 +167,7 @@ impl Object {
                             object_index: usize,
                             instance_count: u32,
                             base_instance: u32) {
-    unsafe {
+    crate::gl! {
       gl::BindVertexArray(self.vao);
 
       if self.index_type != gl::NONE {
@@ -245,47 +240,53 @@ impl Object {
       }
     }
 
-    unsafe {
+    crate::gl! {
       gl::GenVertexArrays(1, &mut self.vao);
       gl::BindVertexArray(self.vao);
+    }
 
-      if let Some(chunk) = data_chunk {
+    if let Some(chunk) = data_chunk {
+      crate::gl!{
         gl::GenBuffers(1, &mut self.data_buf);
         gl::BindBuffer(gl::ARRAY_BUFFER, self.data_buf);
-        gl::BufferData(gl::ARRAY_BUFFER, chunk.data_length as _, ptr(chunk).add(chunk.data_offset as _) as _, gl::STATIC_DRAW);
-      } else {
-        let mut data_size = 0;
-        let mut size_used = 0;
+        gl::BufferData(gl::ARRAY_BUFFER, chunk.data_length as _, data.chunk_at(chunk, chunk.data_offset, chunk.data_length), gl::STATIC_DRAW);  
+      }
+    } else {
+      let mut data_size = 0;
+      let mut size_used = 0;
 
-        if let Some(chunk) = vertex_data_chunk {
-          data_size += chunk.data_size;
-        }
+      if let Some(chunk) = vertex_data_chunk {
+        data_size += chunk.data_size;
+      }
 
-        if let Some(chunk) = index_data_chunk {
-          data_size += chunk.index_count * match chunk.index_type { gl::UNSIGNED_SHORT => size_of::<u16>() , _ => size_of::<u8>() } as u32;
-        }
+      if let Some(chunk) = index_data_chunk {
+        data_size += chunk.index_count * match chunk.index_type { gl::UNSIGNED_SHORT => size_of::<u16>() , _ => size_of::<u8>() } as u32;
+      }
 
+      crate::gl! {
         gl::GenBuffers(1, &mut self.data_buf);
         gl::BindBuffer(gl::ARRAY_BUFFER, self.data_buf);
         gl::BufferData(gl::ARRAY_BUFFER, data_size as _, null(), gl::STATIC_DRAW);
-
-        if let Some(chunk) = vertex_data_chunk {
-          gl::BufferSubData(gl::ARRAY_BUFFER, 0, chunk.data_size as _, data[..].as_ptr().add(chunk.data_offset as _) as _);
-          size_used += chunk.data_offset;
-        }
-
-        if let Some(chunk) = index_data_chunk {
-          gl::BufferSubData(gl::ARRAY_BUFFER,
-                            size_used as _,
-                            (chunk.index_count as usize
-                              * match chunk.index_type { gl::UNSIGNED_SHORT => size_of::<u16>() , _ => size_of::<u8>()}) as _,
-                            data[..].as_ptr().add(chunk.index_data_offset as _) as _);
-        }
       }
 
-      if let Some(chunk) = vertex_attrib_chunk {
-        for i in 0..chunk.attrib_count as usize {
-          let decl = &*(&chunk.attrib_data as *const sb6m::VertexAttribDecl).add(i);
+      if let Some(chunk) = vertex_data_chunk {
+        crate::gl!(gl::BufferSubData(gl::ARRAY_BUFFER, 0, chunk.data_size as _, data.at(chunk.data_offset as _) as _));
+        size_used += chunk.data_offset;
+      }
+
+      if let Some(chunk) = index_data_chunk {
+        crate::gl!(gl::BufferSubData(gl::ARRAY_BUFFER,
+                          size_used as _,
+                          (chunk.index_count as usize
+                            * match chunk.index_type { gl::UNSIGNED_SHORT => size_of::<u16>() , _ => size_of::<u8>()}) as _,
+                          data.at(chunk.index_data_offset)));
+      }
+    }
+
+    if let Some(chunk) = vertex_attrib_chunk {
+      for i in 0..chunk.attrib_count as usize {
+        let decl = data.load_decl(&chunk.attrib_data, i);
+        crate::gl!{
           gl::VertexAttribPointer(i as _,
                                   decl.size as _,
                                   decl.data_type,
@@ -293,39 +294,41 @@ impl Object {
                                   decl.stride as _,
                                   decl.data_offset as _);
           gl::EnableVertexAttribArray(i as _);
-        }  
-      }
-
-      if let Some(chunk) = index_data_chunk.as_ref() {
-        gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.data_buf);
-        self.index_type = chunk.index_type;
-        self.index_offset = chunk.index_data_offset;
-      } else {
-        self.index_type = gl::NONE;
-      }
-
-      if let Some(chunk) = sub_object_chunk {
-        for i in 0..chunk.count as usize {
-          self.sub_object.push((*(&chunk.sub_object as *const sb6m::SubObjectDecl).add(i)).clone());
         }
+      }  
+    }
 
-        self.num_sub_objects = chunk.count;
-      } else {
-        let decl = sb6m::SubObjectDecl {
-          first: 0,
-          count: match self.index_type { gl::NONE => vertex_data_chunk.unwrap().total_vertices, _ => index_data_chunk.unwrap().index_count }
-        };
-        self.sub_object.push(decl);
-        self.num_sub_objects = 1;
+    if let Some(chunk) = index_data_chunk.as_ref() {
+      crate::gl!(gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.data_buf));
+      self.index_type = chunk.index_type;
+      self.index_offset = chunk.index_data_offset;
+    } else {
+      self.index_type = gl::NONE;
+    }
+
+    if let Some(chunk) = sub_object_chunk {
+      for i in 0..chunk.count as usize {
+        self.sub_object.push(data.load_decl(&chunk.sub_object, i));
       }
 
+      self.num_sub_objects = chunk.count;
+    } else {
+      let decl = sb6m::SubObjectDecl {
+        first: 0,
+        count: match self.index_type { gl::NONE => vertex_data_chunk.unwrap().total_vertices, _ => index_data_chunk.unwrap().index_count }
+      };
+      self.sub_object.push(decl);
+      self.num_sub_objects = 1;
+    }
+
+    crate::gl! {
       gl::BindVertexArray(0);
-      gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0);
+      gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0);  
     }
   }
 
   pub fn free(&mut self) {
-    unsafe {
+    crate::gl! {
       gl::DeleteVertexArrays(1, &self.vao);
       gl::DeleteBuffers(1, &self.data_buf);
     }
@@ -336,7 +339,8 @@ impl Object {
   }
 }
 
-trait LoadChunk<T: Clone>: std::ops::Deref<Target = [u8]> {
+trait LoadChunk<T: Clone>: Check + std::ops::Deref<Target = [u8]> {
+  #[inline(always)]
   fn load(&self, offset: usize) -> Option<&T> {
     let end = offset + size_of::<T>();
     assert!(end < self.len());
@@ -345,6 +349,46 @@ trait LoadChunk<T: Clone>: std::ops::Deref<Target = [u8]> {
       Some(&*(&self[offset] as *const _ as *const T))
     }
   }
+
+  #[inline(always)]
+  fn load_decl(&self, decl: &[T; 1], index: usize) -> T {
+    unsafe {
+      let head = (decl as *const T).add(index);
+      let tail = head.add(1);
+      self.assert_contain((head as _, tail as _));
+      (*head).clone()
+    }
+  }
+
+  #[inline(always)]
+  fn chunk_at(&self, chunk: &T, offset: u32, data_len: u32) -> *const std::ffi::c_void {
+    unsafe {
+      let head = (chunk as *const T as *const u8).add(offset as _);
+      let tail = head.add(data_len as _);
+      self.assert_contain((head, tail));
+      head as _
+    }
+  }
+}
+
+trait Check: std::ops::Deref<Target = [u8]> {
+  #[inline(always)]
+  fn assert_contain(&self, range: (*const u8, *const u8)) {
+    let bounds = (self.first().unwrap() as *const u8, self.last().unwrap() as *const u8);
+
+    assert!(range.0.le(&range.1));
+    assert!((range.0 as *const u8).ge(&bounds.0));
+    assert!((range.1 as *const u8).le(&bounds.1));
+  }
+}
+
+trait Ptr: std::ops::Deref<Target = [u8]> {
+  #[inline(always)]
+  fn at(&self, offset: u32) -> *const std::ffi::c_void {
+    (&self[offset as usize]) as *const _ as _
+  }
 }
 
 impl<T: Clone> LoadChunk<T> for Vec<u8> {}
+impl Ptr for Vec<u8> {}
+impl Check for Vec<u8> {}

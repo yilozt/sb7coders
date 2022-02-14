@@ -1,6 +1,7 @@
 use std::{ffi::CString, ptr};
 
 use gl::types::*;
+use sb7::gl;
 use sb7::application::{Application};
 
 #[derive(Default)]
@@ -14,11 +15,11 @@ impl MyApplication {
     let mut success = gl::FALSE as GLint;
     let mut log = [0; 1024];
     let mut len: GLsizei = 0;
-    unsafe {
+    gl! {
       gl::GetShaderiv(shader, gl::COMPILE_STATUS, &mut success);
     }
     if success != gl::TRUE as GLint {
-      unsafe {
+      gl! {
         gl::GetShaderInfoLog(shader, 1024, &mut len, log.as_mut_ptr() as *mut GLchar);
         return Some(
           std::str::from_utf8(&log)
@@ -59,7 +60,7 @@ impl MyApplication {
     let vertex_shader_source = CString::new(VERTEX_SHADER_SOUECE.as_bytes()).unwrap();
     let fragment_shader_source = CString::new(FRAGMENT_SHADER_SOUECE.as_bytes()).unwrap();
 
-    unsafe {
+    gl! {
       let vertex_shader = gl::CreateShader(gl::VERTEX_SHADER);
       gl::ShaderSource(vertex_shader, 1, &vertex_shader_source.as_ptr(), ptr::null());
       gl::CompileShader(vertex_shader);
@@ -98,14 +99,14 @@ impl MyApplication {
 impl Application for MyApplication {
   fn startup(&mut self) {
     self.rendering_program = self.compile_shaders();
-    unsafe {
+    gl! {
       gl::CreateVertexArrays(1, &mut self.vertex_array_object);
       gl::BindVertexArray(self.vertex_array_object);
     }
   }
 
   fn render(&self, current_time: f64) {
-    unsafe {
+    gl! {
       let g = (current_time as f32).sin() * 0.5 + 0.5;
       gl::ClearBufferfv(gl::COLOR, 0, &[g, g, g, 1.0f32] as *const f32);
 
@@ -115,7 +116,7 @@ impl Application for MyApplication {
   }
 
   fn shutdown(&mut self) {
-    unsafe {
+    gl! {
       gl::DeleteVertexArrays(1, &self.vertex_array_object);
       gl::DeleteProgram(self.rendering_program);
     }

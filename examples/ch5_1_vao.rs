@@ -25,7 +25,7 @@ impl Application for App {
       Vertex { x:  0.0, y:  0.5, z: 0.0, r: 0.0, g: 0.0, b: 1.0 },
     ];
   
-    unsafe {
+    sb7::gl! {
       let mut vao = 0;
       gl::CreateVertexArrays(1, &mut vao);
       
@@ -88,14 +88,14 @@ impl Application for App {
   }
 
   fn render(&self, _current_time: f64) {
-    unsafe {
+    sb7::gl! {
       gl::ClearBufferfv(gl::COLOR,0, [0.0, 0.0, 0.0f32].as_ptr());
       gl::DrawArrays(gl::TRIANGLES, 0, 3);
     }
   }
 
   fn shutdown(&mut self) {
-    unsafe {
+    sb7::gl! {
       gl::DeleteBuffers(2, &self.buf);
       gl::DeleteProgram(self.program);
       gl::DeleteVertexArrays(1, &self.vao);

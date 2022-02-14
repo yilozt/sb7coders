@@ -10,27 +10,6 @@ glfw = "^0.43.0"
 gl = "^0.14.0"
 
 [[bin]]
-name = "ch2"
-path = "ch2/main.rs"
-
-[[bin]]
-name = "1_vertexattr"
-path = "ch3/1_vertexattr.rs"
-[[bin]]
-name = "2_transdata"
-path = "ch3/2_transdata.rs"
-[[bin]]
-name = "3_interfaceblk"
-path = "ch3/3_interfaceblk.rs"
-[[bin]]
-name = "4_tessellatedtri"
-path = "ch3/4_tessellatedtri.rs"
-
-[[bin]]
-name = "5_geometry"
-path = "ch3/5_geometry.rs"
-
-[[bin]]
 name = "test"
 path = "test.rs"
 

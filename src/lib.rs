@@ -1,8 +1,15 @@
 pub mod application;
-pub mod vmath;
 pub mod ktx;
 pub mod object;
+pub mod vmath;
 
 mod prog;
-pub use prog::shader;
 pub use prog::program;
+pub use prog::shader;
+
+#[macro_export]
+macro_rules! gl {
+  ($($x: tt)*) => {
+    unsafe { $($x)* }
+  };
+}

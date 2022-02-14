@@ -1,5 +1,5 @@
 use std::ffi::CString;
-
+use sb7::gl;
 use gl::types::*;
 use sb7::application;
 
@@ -47,7 +47,7 @@ impl application::Application for MyApp {
     )
     .unwrap();
 
-    unsafe {
+    gl! {
       // 创建着色器程序
       let program = gl::CreateProgram();
 
@@ -83,7 +83,7 @@ impl application::Application for MyApp {
     let current_time = current_time as f32;
     let green = [0.0, 0.0, 0.0, 0.0f32];
     let attrib = [current_time.sin() * 0.5, current_time.cos() * 0.6, 0.0, 0.0];
-    unsafe {
+    gl! {
       // 清屏
       gl::ClearBufferfv(gl::COLOR, 0, green.as_ptr());
       
@@ -99,7 +99,7 @@ impl application::Application for MyApp {
   }
 
   fn shutdown(&mut self) {
-    unsafe {
+    gl! {
       gl::DeleteProgram(self.program);
       gl::DeleteVertexArrays(1, &self.vao);
     }
