@@ -1,5 +1,10 @@
+
+use std::{sync::Mutex};
+use once_cell::sync::OnceCell;
+
 use glfw::{Action, Context, Key};
 
+#[derive(Debug, Clone)]
 pub struct AppConfig {
   pub title:  String,
   pub width:  usize,
@@ -14,9 +19,15 @@ impl Default for AppConfig {
   }
 }
 
+static INFO: OnceCell<Mutex<AppConfig>> = OnceCell::new();
+
 pub trait Application {
   fn init(&self) -> AppConfig {
     AppConfig::default()
+  }
+
+  fn info(&self) -> AppConfig {
+    INFO.get().unwrap().lock().unwrap().clone()
   }
 
   fn run(&mut self) {
@@ -24,16 +35,21 @@ pub trait Application {
     glfw.window_hint(glfw::WindowHint::ContextVersion(4, 6));
     glfw.window_hint(glfw::WindowHint::OpenGlProfile(glfw::OpenGlProfileHint::Core));
 
-    let AppConfig { title, width, height } = self.init();
+    let info = {
+      INFO.set(Mutex::new(self.init())).unwrap();
+      INFO.get().unwrap().lock().unwrap().clone()
+    };
 
     let (mut window, events) =
-      glfw.create_window(width as u32, height as u32, &title, glfw::WindowMode::Windowed)
+      glfw.create_window(info.width as u32, info.height as u32, &info.title, glfw::WindowMode::Windowed)
           .expect("Failed to create GLFW window.");
     gl::load_with(|s| window.get_proc_address(s));
 
     super::gl! {
-      gl::Viewport(0, 0, width as i32, height as i32);
+      gl::Viewport(0, 0, info.width as i32, info.height as i32);
     }
+
+    std::mem::drop(info);
 
     window.set_key_polling(true);
     window.set_size_polling(true);
@@ -78,6 +94,12 @@ pub trait Application {
       }
       glfw::WindowEvent::Size(w, h) => unsafe {
         gl::Viewport(0, 0, w, h);
+        {
+          let mut lck = INFO.get().unwrap().lock();
+          let info = lck.as_mut().unwrap();
+          info.width = w as _;
+          info.height = h as _;
+        }
         self.on_resize(w, h);
       },
       _ => {}

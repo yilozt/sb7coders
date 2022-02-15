@@ -22,25 +22,26 @@
 use std::{io::Read, mem::size_of, ptr::null};
 
 pub mod sb6m {
-  macro_rules! fourcc {
-    ($a: expr, $b: expr, $c: expr, $d: expr) => {
-      ($a as u32) << 0 | ($b as u32) << 8 | ($c as u32) << 16 | ($d as u32) << 24
-    };
+  #[inline(always)]
+  const fn fourcc(s: &[u8; 4]) -> u32 {
+    u32::from_le_bytes(*s)
   }
 
   #[inline(always)]
   pub fn magic() -> u32 {
-    fourcc!('S', 'M', '6', 'M')
+    fourcc(b"SM6M")
   }
 
   #[allow(non_snake_case)]
   pub mod ChunkType {
-    pub const INDEX_DATA: u32      = fourcc!('I', 'N', 'D', 'X');
-    pub const VERTEX_DATA: u32     = fourcc!('V', 'R', 'T', 'X');
-    pub const VERTEX_ATTRIBS: u32  = fourcc!('A', 'T', 'R', 'B');
-    pub const SUB_OBJECT_LIST: u32 = fourcc!('O', 'L', 'S', 'T');
-    pub const COMMENT: u32         = fourcc!('C', 'M', 'N', 'T');
-    pub const DATA: u32            = fourcc!('D', 'A', 'T', 'A');
+    use super::fourcc;
+
+    pub const INDEX_DATA: u32      = fourcc(b"INDX");
+    pub const VERTEX_DATA: u32     = fourcc(b"VRTX");
+    pub const VERTEX_ATTRIBS: u32  = fourcc(b"ATRB");
+    pub const SUB_OBJECT_LIST: u32 = fourcc(b"OLST");
+    pub const COMMENT: u32         = fourcc(b"CMNT");
+    pub const DATA: u32            = fourcc(b"DATA");
   }
 
   #[repr(C)]

@@ -411,19 +411,25 @@ where
     + Neg<Output = T>
     + Default
     + Copy
-    + From<f32>,
+    + From<f32> + From<u8>,
+  TMat4<T>: Mul<TMat4<T>, Output = TMat4<T>>,
+  f64: From<T>,
 {
   // forward
   let f = (center - eye).normalize();
+  let u = up.normalize();
   // sideway
-  let s = f.cross(up);
+  let s = f.cross(u);
   // up
-  let u = f.cross(s);
+  let u = s.cross(f);
 
-  mat4![s[0]        , u[0]        , f[0]        , -eye[0],
-        s[1]        , u[1]        , f[1]        , -eye[1],
-        s[2]        , u[2]        , f[2]        , -eye[2],
-        T::from(0.0), T::from(0.0), T::from(0.0), T::from(1.0)]
+  let m: TMat4<T> = mat4![
+          s[0],        s[1],         s[2],         T::from(0.0),
+          u[0],        u[1],         u[2],         T::from(0.0),
+         -f[0],        -f[1],        -f[2],        T::from(0.0),
+         T::from(0.0), T::from(0.0), T::from(0.0), T::from(1.0)];
+
+  m * translate(-eye[0], -eye[1], -eye[2])
 }
 
 #[inline(always)]

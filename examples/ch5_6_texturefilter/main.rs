@@ -3,6 +3,9 @@ use sb7::gl;
 use sb7::{application::*, vmath::*};
 use std::{ffi::CString, mem::size_of};
 
+mod data;
+use data::generate_tex;
+
 #[derive(Clone, Copy)]
 enum TexFilter {
   Nearst = NEAREST as _,

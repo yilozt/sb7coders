@@ -172,5 +172,7 @@ impl App {
     sb7::gl! {
       UseProgram(self.render_prog);
     }
+
+    self.on_resize(self.info().width as _, self.info().height as _);
   }
 }
