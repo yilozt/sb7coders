@@ -2,6 +2,9 @@
 use std::{sync::Mutex};
 use once_cell::sync::OnceCell;
 
+use imgui_glfw_rs::glfw;
+use imgui_glfw_rs::imgui;
+
 use glfw::{Action, Context, Key};
 
 #[derive(Debug, Clone)]
@@ -30,6 +33,8 @@ pub trait Application {
     INFO.get().unwrap().lock().unwrap().clone()
   }
 
+  fn ui(&mut self, ui: &imgui::Ui) { }
+
   fn run(&mut self) {
     let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
     glfw.window_hint(glfw::WindowHint::ContextVersion(4, 6));
@@ -45,14 +50,17 @@ pub trait Application {
           .expect("Failed to create GLFW window.");
     gl::load_with(|s| window.get_proc_address(s));
 
+    let mut imgui = imgui::Context::create();
+    imgui.set_ini_filename(None);
+    let mut imgui_glfw = imgui_glfw_rs::ImguiGLFW::new(&mut imgui, &mut window);
+
     super::gl! {
       gl::Viewport(0, 0, info.width as i32, info.height as i32);
     }
 
     std::mem::drop(info);
 
-    window.set_key_polling(true);
-    window.set_size_polling(true);
+    window.set_all_polling(true);
     window.make_current();
 
     self.startup();
@@ -60,11 +68,18 @@ pub trait Application {
     while !window.should_close() {
       glfw.poll_events();
       for (_, event) in glfw::flush_messages(&events) {
+        imgui_glfw.handle_event(&mut imgui, &event);
         self.handle_window_event(&mut window, event);
       }
 
       self.render(glfw.get_time());
 
+      let ui = imgui_glfw.frame(&mut window, &mut imgui);
+
+      self.ui(&ui);
+
+      imgui_glfw.draw(ui, &mut window);
+  
       window.swap_buffers();
     }
 

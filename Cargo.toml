@@ -6,12 +6,13 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-glfw = "^0.43.0"
 gl = "^0.14.0"
 once_cell = "^1.9.0"
 stb_image = "^0.2.3"
 
+[dependencies.imgui-glfw-rs]
+git = "https://github.com/yilozt/imgui-glfw-rs"
+
 [[bin]]
 name = "test"
 path = "test.rs"
-

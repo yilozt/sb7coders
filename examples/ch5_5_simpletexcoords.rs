@@ -20,7 +20,7 @@
 // DEALINGS IN THE SOFTWARE.
 
 use gl::*;
-use sb7::application::*;
+use sb7::prelude::*;
 use std::{ffi::CString, ptr::addr_of};
 
 #[derive(Default)]
