@@ -22,19 +22,6 @@
 use sb7::prelude::*;
 
 #[derive(Default)]
-struct Textures {
-  color:   u32,
-  normals: u32,
-}
-
-#[derive(Default)]
-struct UniformsBlock {
-  mv_matrix:   Mat4,
-  view_matrix: Mat4,
-  proj_matrix: Mat4,
-}
-
-#[derive(Default)]
 struct Uniforms {
   mvp: i32,
 }
@@ -44,11 +31,6 @@ struct App {
   clear_program:   u32,
   append_program:  u32,
   resolve_program: u32,
-
-  textures: Textures,
-
-  uniforms_block:  UniformsBlock,
-  uniforms_buffer: u32,
 
   uniforms: Uniforms,
 
@@ -98,10 +80,6 @@ impl Application for App {
     self.load_shaders();
 
     gl! {
-      GenBuffers(1, &mut self.uniforms_buffer);
-      BindBuffer(UNIFORM_BUFFER, self.uniforms_buffer);
-      BufferData(UNIFORM_BUFFER, size_of::<UniformsBlock>() as _, null(), DYNAMIC_DRAW);
-
       self.object.load("media/objects/dragon.sbm");
 
       GenBuffers(1, &mut self.fragment_buffer);
@@ -122,9 +100,6 @@ impl Application for App {
   }
 
   fn render(&self, current_time: f64) {
-    let zeros = [0.0, 0.0, 0.0, 0.0f32].as_ptr();
-    let gray = [0.1, 0.1, 0.1, 0.0f32].as_ptr();
-    let ones = [1.0f32].as_ptr();
     let f = current_time as f32;
 
     gl! {
