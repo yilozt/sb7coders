@@ -141,9 +141,9 @@ impl<T> TVec3<T> {
   {
     Self {
       a: [
-        self.a[1] * other.a[2] - self.a[2] * other.a[1],
-        self.a[2] * other.a[0] - self.a[1] * other.a[2],
-        self.a[0] * other.a[1] - self.a[1] * other.a[0],
+        self[1] * other[2] - self[2] * other[1],
+        self[2] * other[0] - self[0] * other[2],
+        self[0] * other[1] - self[1] * other[0],
       ],
     }
   }
