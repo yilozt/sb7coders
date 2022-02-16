@@ -33,7 +33,7 @@ pub trait Application {
     INFO.get().unwrap().lock().unwrap().clone()
   }
 
-  fn ui(&mut self, ui: &imgui::Ui) { }
+  fn ui(&mut self, _ui: &imgui::Ui) { }
 
   fn run(&mut self) {
     let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
