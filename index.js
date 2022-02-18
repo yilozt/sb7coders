@@ -13,7 +13,7 @@ import('./pkg')
     ].map(demo => `<option value="${demo}">${demo.slice(1)}</option>`)
     .join('\n');
 
-    app['_ch5_4_simpletexture'].run();
+    app['_default'].run();
 
     /** @type HTMLSelectElement */
     let select = document.getElementById('select');
