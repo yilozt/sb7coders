@@ -177,8 +177,8 @@ impl Application for App {
     unsafe {
       for i in 0..256 {
         (&mut *(droplet.add(i)))[0] = self.droplet_x_offset[i];
-        (&mut *(droplet.add(i)))[1] =
-          2.0 - ((t + i as f32) * self.droplet_fall_speed[i]) % 4.31;
+        // Reset Y position by mod operation
+        (&mut *(droplet.add(i)))[1] = 2.0 - ((t + i as f32) * self.droplet_fall_speed[i]) % 4.31;
         (&mut *(droplet.add(i)))[2] = t * self.droplet_rot_speed[i];
         (&mut *(droplet.add(i)))[3] = 0.0;
       }

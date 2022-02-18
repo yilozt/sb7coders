@@ -159,7 +159,15 @@ impl Application for App {
   }
 
   fn shutdown(&mut self) {
-    
+    gl! {
+      DeleteProgram(self.append_program);
+      DeleteProgram(self.resolve_program);
+      DeleteProgram(self.clear_program);
+      DeleteBuffers(1, &self.fragment_buffer);
+      DeleteBuffers(1, &self.atomic_counter_buffer);
+      DeleteTextures(1, &self.head_pointer_image);
+      DeleteVertexArrays(1, &self.dummy_vao);
+    }
   }
 }
 
