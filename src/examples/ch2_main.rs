@@ -1,40 +1,19 @@
-use std::{ffi::CString, ptr};
-
-use gl::types::*;
-use sb7::gl;
-use sb7::application::{Application};
+use crate::application::Application;
+use web_sys::{WebGl2RenderingContext, WebGlProgram, WebGlVertexArrayObject};
 
 #[derive(Default)]
-struct MyApplication {
-  rendering_program: GLuint,
-  vertex_array_object: GLuint,
+pub struct App {
+  rendering_program:   Option<WebGlProgram>,
+  vertex_array_object: Option<WebGlVertexArrayObject>,
 }
 
-impl MyApplication {
-  fn check_shader(shader: GLuint) -> Option<String> {
-    let mut success = gl::FALSE as GLint;
-    let mut log = [0; 1024];
-    let mut len: GLsizei = 0;
-    gl! {
-      gl::GetShaderiv(shader, gl::COMPILE_STATUS, &mut success);
-    }
-    if success != gl::TRUE as GLint {
-      gl! {
-        gl::GetShaderInfoLog(shader, 1024, &mut len, log.as_mut_ptr() as *mut GLchar);
-        return Some(
-          std::str::from_utf8(&log)
-            .unwrap_or("invaild utf-8 string")
-            .to_string(),
-        );
-      }
-    } else {
-      None
-    }
-  }
+impl App {
+  fn compile_shaders(&self,
+                     gl: &WebGl2RenderingContext)
+                     -> Option<web_sys::WebGlProgram> {
+    const VERTEX_SHADER_SOUECE: &str = "#version 300 es
 
-  fn compile_shaders(&self) -> GLuint {
-    const VERTEX_SHADER_SOUECE: &str = "
-      #version 460 core
+      precision mediump float;
 
       void main() {
         const vec4 vertices[3] = vec4[3](
@@ -47,8 +26,9 @@ impl MyApplication {
       }
     ";
 
-    const FRAGMENT_SHADER_SOUECE: &str = "
-      #version 460 core
+    const FRAGMENT_SHADER_SOUECE: &str = "#version 300 es
+      precision mediump float;
+      
       out vec4 color;
 
       void main() {
@@ -56,74 +36,50 @@ impl MyApplication {
       }
     ";
 
-    // 创建着色器
-    let vertex_shader_source = CString::new(VERTEX_SHADER_SOUECE.as_bytes()).unwrap();
-    let fragment_shader_source = CString::new(FRAGMENT_SHADER_SOUECE.as_bytes()).unwrap();
+    let vertex_shader = gl.create_shader(web_sys::WebGl2RenderingContext::VERTEX_SHADER)
+                          .unwrap();
+    gl.shader_source(&vertex_shader, VERTEX_SHADER_SOUECE);
+    gl.compile_shader(&vertex_shader);
 
-    gl! {
-      let vertex_shader = gl::CreateShader(gl::VERTEX_SHADER);
-      gl::ShaderSource(vertex_shader, 1, &vertex_shader_source.as_ptr(), ptr::null());
-      gl::CompileShader(vertex_shader);
+    let fragment_shader =
+      gl.create_shader(web_sys::WebGl2RenderingContext::FRAGMENT_SHADER)
+        .unwrap();
+    gl.shader_source(&fragment_shader, FRAGMENT_SHADER_SOUECE);
+    gl.compile_shader(&fragment_shader);
 
-      // 检查编译结果
-      if let Some(err) = Self::check_shader(vertex_shader) {
-        println!("ERR: vertex shader compile failed.");
-        println!("== {}", err);
-      }
+    // 创建着色器程序
+    let program = gl.create_program().unwrap();
+    gl.attach_shader(&program, &vertex_shader);
+    gl.attach_shader(&program, &fragment_shader);
+    gl.link_program(&program);
 
-      let fragment_shader = gl::CreateShader(gl::FRAGMENT_SHADER);
-      gl::ShaderSource(fragment_shader, 1, &fragment_shader_source.as_ptr(), ptr::null());
-      gl::CompileShader(fragment_shader);
+    // 着色器已经被编译，就不再需要了
+    gl.delete_shader(Some(&vertex_shader));
+    gl.delete_shader(Some(&fragment_shader));
 
-      // 检查编译结果
-      if let Some(err) = Self::check_shader(fragment_shader) {
-        println!("ERR: fragment shader compile failed.");
-        println!("== {}", err);
-      }
-
-      // 创建着色器程序
-      let program = gl::CreateProgram();
-      gl::AttachShader(program, vertex_shader);
-      gl::AttachShader(program, fragment_shader);
-      gl::LinkProgram(program);
-
-      // 着色器已经被编译，就不再需要了
-      gl::DeleteShader(vertex_shader);
-      gl::DeleteShader(fragment_shader);
-
-      program
-    }
+    Some(program)
   }
 }
 
-impl Application for MyApplication {
-  fn startup(&mut self) {
-    self.rendering_program = self.compile_shaders();
-    gl! {
-      gl::CreateVertexArrays(1, &mut self.vertex_array_object);
-      gl::BindVertexArray(self.vertex_array_object);
-    }
+impl Application for App {
+  fn startup(&mut self, gl: &WebGl2RenderingContext) {
+    self.rendering_program = self.compile_shaders(gl);
+    self.vertex_array_object = gl.create_vertex_array();
+    gl.bind_vertex_array(self.vertex_array_object.as_ref());
   }
 
-  fn render(&self, current_time: f64) {
-    gl! {
-      let g = (current_time as f32).sin() * 0.5 + 0.5;
-      gl::ClearBufferfv(gl::COLOR, 0, &[g, g, g, 1.0f32] as *const f32);
+  fn render(&self, gl: &WebGl2RenderingContext, current_time: f64) {
+    let g = (current_time as f32).sin() * 0.5 + 0.5;
+    gl.clear_color(g, g, g, 1.0);
+    gl.clear(web_sys::WebGl2RenderingContext::COLOR_BUFFER_BIT);
 
-      gl::UseProgram(self.rendering_program);
-      gl::DrawArrays(gl::TRIANGLES, 0, 3);
-    }
+    gl.use_program(self.rendering_program.as_ref());
+    gl.draw_arrays(web_sys::WebGl2RenderingContext::TRIANGLES, 0, 3);
   }
 
-  fn shutdown(&mut self) {
-    gl! {
-      gl::DeleteVertexArrays(1, &self.vertex_array_object);
-      gl::DeleteProgram(self.rendering_program);
-    }
+  fn shutdown(&mut self, gl: &WebGl2RenderingContext) {
+    web_sys::console::log_1(&"shutdown.".into());
+    gl.delete_vertex_array(self.vertex_array_object.as_ref());
+    gl.delete_program(self.rendering_program.as_ref());
   }
-}
-
-fn main() {
-  let mut app = MyApplication::default();
-  app.run();
 }

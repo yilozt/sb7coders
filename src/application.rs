@@ -1,5 +1,11 @@
-use std::cell::RefCell;
+use std::{cell::RefCell, collections::HashSet};
 use std::rc::Rc;
+use once_cell::sync::Lazy;
+
+// if app are running, its address in this list
+static mut APP_RUNNING: Lazy<HashSet<usize>> = Lazy::new(|| {
+  HashSet::new()
+});
 
 use wasm_bindgen::{prelude::Closure, JsCast};
 
@@ -24,9 +30,19 @@ fn request_animation_frame(f: &Closure<dyn FnMut()>) {
                    .expect("should register `requestAnimationFrame` OK");
 }
 
-pub trait Application {
+pub trait Application: 'static {
   fn init(&self) -> AppConfig {
     AppConfig::default()
+  }
+
+  fn close_app(&self, ptr: usize) {
+    web_sys::console::log_1(&ptr.into());
+    unsafe { APP_RUNNING.remove(&ptr.into()); }
+  }
+
+  fn should_close(&self, ptr: usize) -> bool {
+    web_sys::console::log_1(&ptr.into());
+    unsafe { APP_RUNNING.get(&ptr).is_none() }
   }
 
   fn info(&self) -> AppConfig {
@@ -38,7 +54,7 @@ pub trait Application {
                 title:  "", }
   }
 
-  fn run(app: Rc<RefCell<Self>>)
+  fn run(&'static mut self, ptr: usize)
     where Self: 'static
   {
     let canvas = web_sys::window().unwrap()
@@ -56,21 +72,29 @@ pub trait Application {
 
     let performance = web_sys::window().unwrap().performance().unwrap();
 
-    let info = { app.borrow().init() };
+    let info = self.init();
 
     gl.viewport(0, 0, info.width as _, info.height as _);
 
-    {
-      app.borrow_mut().startup(&gl)
-    };
+    self.startup(&gl);
+
+    // register running app
+    unsafe { APP_RUNNING.insert(ptr); }
 
     let f = Rc::new(RefCell::new(None));
     let g = f.clone();
 
-    let _app = app.clone();
+    let app = Rc::new(RefCell::new(self));
+    // let _app = app.clone();
+    let _gl = gl.clone();
     *g.borrow_mut() =
       Some(Closure::wrap(Box::new(move || {
-        _app.borrow_mut().render(&gl, performance.now() / 1000.0);
+        if app.borrow().should_close(ptr) {
+          app.borrow_mut().shutdown(&gl);
+          return;
+        }
+
+        app.borrow_mut().render(&_gl.clone(), performance.now() / 1000.0);
 
         // Schedule ourself for another requestAnimationFrame callback.
         request_animation_frame(f.borrow().as_ref().unwrap());
@@ -78,18 +102,17 @@ pub trait Application {
 
     request_animation_frame(g.borrow().as_ref().unwrap());
 
-    app.borrow_mut().shutdown();
   }
 
-  fn startup(&mut self, gl: &web_sys::WebGl2RenderingContext)
+  fn startup(&mut self, _gl: &web_sys::WebGl2RenderingContext)
     where Self: 'static
   {
   }
 
   fn render(&self, gl: &web_sys::WebGl2RenderingContext, current_time: f64) {
     let g = (current_time.sin() * 0.5 + 0.5) as f32;
-    gl.clear_color(g, g, 0.0, 1.0);
+    gl.clear_color(g, g, g, 1.0);
     gl.clear(web_sys::WebGl2RenderingContext::COLOR_BUFFER_BIT);
   }
-  fn shutdown(&mut self) {}
+  fn shutdown(&mut self, _gl: &web_sys::WebGl2RenderingContext) {}
 }
