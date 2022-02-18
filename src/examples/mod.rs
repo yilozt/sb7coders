@@ -1,8 +1,7 @@
-use std::ptr::addr_of;
-use wasm_bindgen::prelude::wasm_bindgen;
 use crate::application::*;
 use once_cell::sync::Lazy;
-
+use std::ptr::addr_of;
+use wasm_bindgen::prelude::wasm_bindgen;
 
 macro_rules! def_exam {
   ($mod: ident, $export: ident) => {
@@ -28,6 +27,9 @@ macro_rules! def_exam {
 }
 
 def_exam!(default, _default);
-def_exam!(ch2_main, _ch2_main);
 def_exam!(ch3_1_vertexattr, _ch3_1_vertexattr);
 def_exam!(ch3_2_transdata, _ch3_2_transdata);
+def_exam!(ch5_1_vao, _ch5_1_vao);
+def_exam!(ch5_2_spinningcube, _ch5_2_spinningcube);
+def_exam!(ch5_3_spinningcubes, _ch5_3_spinningcubes);
+def_exam!(ch5_4_simpletexture, _ch5_4_simpletexture);

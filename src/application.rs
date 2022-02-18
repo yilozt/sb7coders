@@ -34,14 +34,14 @@ pub trait Application: 'static {
   }
 
   fn close_app(&self, ptr: usize) {
-    web_sys::console::log_1(&ptr.into());
+    web_sys::console::log_1(&format!("closing ...{}", ptr).into());
     unsafe {
       APP_RUNNING.remove(&ptr.into());
     }
   }
 
   fn should_close(&self, ptr: usize) -> bool {
-    web_sys::console::log_1(&ptr.into());
+    web_sys::console::log_1(&format!("render ...{}", ptr).into());
     unsafe { APP_RUNNING.get(&ptr).is_none() }
   }
 

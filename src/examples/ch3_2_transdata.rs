@@ -16,7 +16,7 @@ impl application::Application for App {
 
   fn startup(&mut self, gl: &gl) {
     let vs_source = "#version 300 es
-      precision mediump float;
+        precision mediump float;
 
         layout (location = 0) in vec4 offset;
         layout (location = 1) in vec4 color;
@@ -70,13 +70,12 @@ impl application::Application for App {
 
   fn render(&self, gl: &gl, current_time: f64) {
     let current_time = current_time as f32;
-    let green = [0.0, 0.0, 0.0, 1.0f32];
     let attrib = [current_time.sin() * 0.5, current_time.cos() * 0.6, 0.0, 0.0];
     let color = [current_time.sin() * 0.5 + 0.5,
                  current_time.cos() * 0.5 + 0.5,
                  0.5,
-                 0.0];
-    gl.clear_bufferfv_with_f32_array(gl::COLOR, 0, &green);
+                 1.0];
+    gl.clear_color(0.0, 0.0, 0.0, 1.0);
     gl.clear(gl::COLOR_BUFFER_BIT);
 
     gl.use_program(self.program.as_ref());
