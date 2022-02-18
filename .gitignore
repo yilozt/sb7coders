@@ -1,4 +1,5 @@
 /target
 /deps
 /_tmp
+/node_modules
 Cargo.lock
