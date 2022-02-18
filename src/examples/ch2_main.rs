@@ -47,13 +47,11 @@ impl App {
     gl.shader_source(&fragment_shader, FRAGMENT_SHADER_SOUECE);
     gl.compile_shader(&fragment_shader);
 
-    // 创建着色器程序
     let program = gl.create_program().unwrap();
     gl.attach_shader(&program, &vertex_shader);
     gl.attach_shader(&program, &fragment_shader);
     gl.link_program(&program);
 
-    // 着色器已经被编译，就不再需要了
     gl.delete_shader(Some(&vertex_shader));
     gl.delete_shader(Some(&fragment_shader));
 

@@ -1,11 +1,9 @@
-use std::{cell::RefCell, collections::HashSet};
-use std::rc::Rc;
 use once_cell::sync::Lazy;
+use std::rc::Rc;
+use std::{cell::RefCell, collections::HashSet};
 
 // if app are running, its address in this list
-static mut APP_RUNNING: Lazy<HashSet<usize>> = Lazy::new(|| {
-  HashSet::new()
-});
+static mut APP_RUNNING: Lazy<HashSet<usize>> = Lazy::new(|| HashSet::new());
 
 use wasm_bindgen::{prelude::Closure, JsCast};
 
@@ -37,7 +35,9 @@ pub trait Application: 'static {
 
   fn close_app(&self, ptr: usize) {
     web_sys::console::log_1(&ptr.into());
-    unsafe { APP_RUNNING.remove(&ptr.into()); }
+    unsafe {
+      APP_RUNNING.remove(&ptr.into());
+    }
   }
 
   fn should_close(&self, ptr: usize) -> bool {
@@ -74,12 +74,22 @@ pub trait Application: 'static {
 
     let info = self.init();
 
+    if let Some(h1) = web_sys::window().unwrap()
+                                       .document()
+                                       .unwrap()
+                                       .get_element_by_id("title")
+    {
+      h1.set_inner_html(info.title);
+    }
+
     gl.viewport(0, 0, info.width as _, info.height as _);
 
     self.startup(&gl);
 
     // register running app
-    unsafe { APP_RUNNING.insert(ptr); }
+    unsafe {
+      APP_RUNNING.insert(ptr);
+    }
 
     let f = Rc::new(RefCell::new(None));
     let g = f.clone();
@@ -87,21 +97,23 @@ pub trait Application: 'static {
     let app = Rc::new(RefCell::new(self));
     // let _app = app.clone();
     let _gl = gl.clone();
-    *g.borrow_mut() =
-      Some(Closure::wrap(Box::new(move || {
-        if app.borrow().should_close(ptr) {
-          app.borrow_mut().shutdown(&gl);
-          return;
-        }
 
-        app.borrow_mut().render(&_gl.clone(), performance.now() / 1000.0);
+    let render = move || {
+      if app.borrow().should_close(ptr) {
+        app.borrow_mut().shutdown(&gl);
+        return;
+      }
 
-        // Schedule ourself for another requestAnimationFrame callback.
-        request_animation_frame(f.borrow().as_ref().unwrap());
-      }) as Box<dyn FnMut()>));
+      app.borrow_mut()
+         .render(&_gl.clone(), performance.now() / 1000.0);
+
+      // Schedule ourself for another requestAnimationFrame callback.
+      request_animation_frame(f.borrow().as_ref().unwrap());
+    };
+    
+    *g.borrow_mut() = Some(Closure::wrap(Box::new(render) as Box<dyn FnMut()>));
 
     request_animation_frame(g.borrow().as_ref().unwrap());
-
   }
 
   fn startup(&mut self, _gl: &web_sys::WebGl2RenderingContext)

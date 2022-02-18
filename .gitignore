@@ -1,3 +1,4 @@
 /target
 /deps
+/_tmp
 Cargo.lock

@@ -29,3 +29,5 @@ macro_rules! def_exam {
 
 def_exam!(default, _default);
 def_exam!(ch2_main, _ch2_main);
+def_exam!(ch3_1_vertexattr, _ch3_1_vertexattr);
+def_exam!(ch3_2_transdata, _ch3_2_transdata);
