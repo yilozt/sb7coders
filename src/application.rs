@@ -1,28 +1,28 @@
+use std::cell::RefCell;
+use std::rc::Rc;
 
-use std::{sync::Mutex};
-use once_cell::sync::OnceCell;
+use wasm_bindgen::{prelude::Closure, JsCast};
 
-use imgui_glfw_rs::glfw;
-use imgui_glfw_rs::imgui;
-
-use glfw::{Action, Context, Key};
-
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct AppConfig {
-  pub title:  String,
-  pub width:  usize,
-  pub height: usize,
+  pub width:  u32,
+  pub height: u32,
+  pub title:  &'static str,
 }
 
 impl Default for AppConfig {
   fn default() -> Self {
-    Self { title:  String::from("OpenGL SuperBible Example"),
-           width:  800,
-           height: 600, }
+    Self { width:  800,
+           height: 600,
+           title:  "OpenGL SuperBible Example", }
   }
 }
 
-static INFO: OnceCell<Mutex<AppConfig>> = OnceCell::new();
+fn request_animation_frame(f: &Closure<dyn FnMut()>) {
+  web_sys::window().unwrap()
+                   .request_animation_frame(f.as_ref().unchecked_ref())
+                   .expect("should register `requestAnimationFrame` OK");
+}
 
 pub trait Application {
   fn init(&self) -> AppConfig {
@@ -30,94 +30,66 @@ pub trait Application {
   }
 
   fn info(&self) -> AppConfig {
-    INFO.get().unwrap().lock().unwrap().clone()
+    let document = web_sys::window().unwrap().document().unwrap();
+    let canvas = document.get_element_by_id("canvas").unwrap();
+    let canvas: web_sys::HtmlCanvasElement = canvas.dyn_into().unwrap();
+    AppConfig { width:  canvas.width(),
+                height: canvas.height(),
+                title:  "", }
   }
 
-  fn ui(&mut self, _ui: &imgui::Ui) { }
+  fn run(app: Rc<RefCell<Self>>)
+    where Self: 'static
+  {
+    let canvas = web_sys::window().unwrap()
+                                  .document()
+                                  .unwrap()
+                                  .get_element_by_id("canvas")
+                                  .unwrap();
 
-  fn run(&mut self) {
-    let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
-    glfw.window_hint(glfw::WindowHint::ContextVersion(4, 6));
-    glfw.window_hint(glfw::WindowHint::OpenGlProfile(glfw::OpenGlProfileHint::Core));
+    let canvas: web_sys::HtmlCanvasElement = canvas.dyn_into().unwrap();
+    let gl: web_sys::WebGl2RenderingContext = canvas.get_context("webgl2")
+                                                    .unwrap()
+                                                    .unwrap()
+                                                    .dyn_into()
+                                                    .unwrap();
 
-    let info = {
-      INFO.set(Mutex::new(self.init())).unwrap();
-      INFO.get().unwrap().lock().unwrap().clone()
+    let performance = web_sys::window().unwrap().performance().unwrap();
+
+    let info = { app.borrow().init() };
+
+    gl.viewport(0, 0, info.width as _, info.height as _);
+
+    {
+      app.borrow_mut().startup(&gl)
     };
 
-    let (mut window, events) =
-      glfw.create_window(info.width as u32, info.height as u32, &info.title, glfw::WindowMode::Windowed)
-          .expect("Failed to create GLFW window.");
-    gl::load_with(|s| window.get_proc_address(s));
+    let f = Rc::new(RefCell::new(None));
+    let g = f.clone();
 
-    let mut imgui = imgui::Context::create();
-    imgui.set_ini_filename(None);
-    let mut imgui_glfw = imgui_glfw_rs::ImguiGLFW::new(&mut imgui, &mut window);
+    let _app = app.clone();
+    *g.borrow_mut() =
+      Some(Closure::wrap(Box::new(move || {
+        _app.borrow_mut().render(&gl, performance.now() / 1000.0);
 
-    super::gl! {
-      gl::Viewport(0, 0, info.width as i32, info.height as i32);
-    }
+        // Schedule ourself for another requestAnimationFrame callback.
+        request_animation_frame(f.borrow().as_ref().unwrap());
+      }) as Box<dyn FnMut()>));
 
-    std::mem::drop(info);
+    request_animation_frame(g.borrow().as_ref().unwrap());
 
-    window.set_all_polling(true);
-    window.make_current();
-
-    self.startup();
-
-    while !window.should_close() {
-      glfw.poll_events();
-      for (_, event) in glfw::flush_messages(&events) {
-        imgui_glfw.handle_event(&mut imgui, &event);
-        self.handle_window_event(&mut window, event);
-      }
-
-      self.render(glfw.get_time());
-
-      let ui = imgui_glfw.frame(&mut window, &mut imgui);
-
-      self.ui(&ui);
-
-      imgui_glfw.draw(ui, &mut window);
-  
-      window.swap_buffers();
-    }
-
-    self.shutdown();
+    app.borrow_mut().shutdown();
   }
 
-  fn startup(&mut self) {}
-  fn render(&self, current_time: f64) {
-    super::gl! {
-      let g = (current_time.sin() * 0.5 + 0.5) as f32;
-      gl::ClearBufferfv(gl::COLOR, 0, [g, g, g, 1.0f32].as_ptr());
-    }
+  fn startup(&mut self, gl: &web_sys::WebGl2RenderingContext)
+    where Self: 'static
+  {
+  }
+
+  fn render(&self, gl: &web_sys::WebGl2RenderingContext, current_time: f64) {
+    let g = (current_time.sin() * 0.5 + 0.5) as f32;
+    gl.clear_color(g, g, 0.0, 1.0);
+    gl.clear(web_sys::WebGl2RenderingContext::COLOR_BUFFER_BIT);
   }
   fn shutdown(&mut self) {}
-
-  fn on_resize(&mut self, _w: i32, _h: i32) {}
-
-  fn on_key(&mut self, _key: Key, _press: Action) {}
-
-  fn handle_window_event(&mut self, window: &mut glfw::Window, event: glfw::WindowEvent) {
-    match event {
-      glfw::WindowEvent::Key(Key::Escape, _, Action::Press, _) => {
-        window.set_should_close(true)
-      }
-      glfw::WindowEvent::Key(key, _, action, _) => {
-        self.on_key(key, action);
-      }
-      glfw::WindowEvent::Size(w, h) => unsafe {
-        gl::Viewport(0, 0, w, h);
-        {
-          let mut lck = INFO.get().unwrap().lock();
-          let info = lck.as_mut().unwrap();
-          info.width = w as _;
-          info.height = h as _;
-        }
-        self.on_resize(w, h);
-      },
-      _ => {}
-    }
-  }
 }
