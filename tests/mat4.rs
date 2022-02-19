@@ -1,5 +1,5 @@
-use sb7::mat;
-use sb7::mat4;
+use sb7;
+use sb7::{mat, mat4};
 use sb7::vec4;
 use sb7::vmath::TMat4;
 

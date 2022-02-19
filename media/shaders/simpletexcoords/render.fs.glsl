@@ -1,15 +1,14 @@
-#version 420 core
+#version 300 es
 
-layout (binding = 0) uniform sampler2D tex_object;
+precision highp float;
 
-in VS_OUT
-{
-    vec2 tc;
-} fs_in;
+uniform sampler2D tex_object;
+
+in vec2 tc;
 
 out vec4 color;
 
 void main(void)
 {
-    color = texture(tex_object, fs_in.tc * vec2(3.0, 1.0));
+    color = texture(tex_object, tc * vec2(3.0, 1.0));
 }

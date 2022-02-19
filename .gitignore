@@ -1,5 +1,6 @@
 /target
 /deps
 /_tmp
+/pkg
 /node_modules
 Cargo.lock

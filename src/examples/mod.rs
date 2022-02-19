@@ -33,3 +33,4 @@ def_exam!(ch5_1_vao, _ch5_1_vao);
 def_exam!(ch5_2_spinningcube, _ch5_2_spinningcube);
 def_exam!(ch5_3_spinningcubes, _ch5_3_spinningcubes);
 def_exam!(ch5_4_simpletexture, _ch5_4_simpletexture);
+def_exam!(ch5_5_simpletexcoords, _ch5_5_simpletexcoords);

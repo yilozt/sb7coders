@@ -1,21 +1,20 @@
-#version 420 core
+#version 300 es
+
+precision highp float;
 
 uniform mat4 mv_matrix;
 uniform mat4 proj_matrix;
 
 layout (location = 0) in vec4 position;
-layout (location = 4) in vec2 tc;
+layout (location = 4) in vec2 tc_in;
 
-out VS_OUT
-{
-    vec2 tc;
-} vs_out;
+out vec2 tc;
 
 void main(void)
 {
     vec4 pos_vs = mv_matrix * position;
 
-    vs_out.tc = tc;
+    tc = tc_in;
 
     gl_Position = proj_matrix * pos_vs;
 }

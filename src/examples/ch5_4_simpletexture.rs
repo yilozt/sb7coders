@@ -8,14 +8,14 @@ pub struct App {
 }
 
 impl App {
-  fn generate_texture(&self, data: &mut [u8], width: usize, height: usize) {
+  fn generate_texture(&self, data: &mut [f32], width: usize, height: usize) {
     assert_eq!(data.len(), width * height * 4);
     for y in 0..height {
       for x in 0..width {
-        data[(y * width + x) * 4 + 0] = ((x & y) & 0xFF) as u8;
-        data[(y * width + x) * 4 + 1] = ((x | y) & 0xFF) as u8;
-        data[(y * width + x) * 4 + 2] = ((x ^ y) & 0xFF) as u8;
-        data[(y * width + x) * 4 + 3] = 0xFF;
+        data[(y * width + x) * 4 + 0] = ((x & y) & 0xFF) as f32 / 255.0;
+        data[(y * width + x) * 4 + 1] = ((x | y) & 0xFF) as f32 / 255.0;
+        data[(y * width + x) * 4 + 2] = ((x ^ y) & 0xFF) as f32 / 255.0;
+        data[(y * width + x) * 4 + 3] = 1.0;
       }
     }
   }
@@ -26,15 +26,17 @@ impl Application for App {
     self.texture = gl.create_texture();
     gl.bind_texture(gl::TEXTURE_2D, self.texture.as_ref());
 
-    gl.tex_storage_2d(gl::TEXTURE_2D, 1, gl::RGBA8, 256, 256);
+    gl.tex_storage_2d(gl::TEXTURE_2D, 1, gl::RGBA32F, 256, 256);
 
     // 在堆上分配空间，这段内存会在离开作用域时自动释放
-    let mut data = Box::new([0u8; 256 * 256 * 4]);
+    let mut data: Vec<f32> = Vec::with_capacity(256 * 256 * 4);
+    data.resize(256 * 256* 4, 0.0f32);
 
     // generate_texture 函数用来向 data 填充数据
     self.generate_texture(&mut data[..], 256, 256);
 
-    gl.tex_sub_image_2d_with_i32_and_i32_and_u32_and_type_and_u8_array_and_src_offset(gl::TEXTURE_2D, 0, 0, 0, 256, 256, gl::RGBA, gl::UNSIGNED_BYTE, data.as_slice(), 0).unwrap();
+    let view = unsafe {js_sys::Float32Array::view(data.as_slice()) };
+    gl.tex_sub_image_2d_with_i32_and_i32_and_u32_and_type_and_opt_array_buffer_view(gl::TEXTURE_2D, 0, 0, 0, 256, 256, gl::RGBA, gl::FLOAT, Some(&view)).unwrap();
 
     gl.tex_parameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST as _);
     gl.tex_parameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as _);

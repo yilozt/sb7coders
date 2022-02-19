@@ -10,10 +10,11 @@ import('./pkg')
       '_ch5_2_spinningcube',
       '_ch5_3_spinningcubes',
       '_ch5_4_simpletexture',
+      '_ch5_5_simpletexcoords',
     ].map(demo => `<option value="${demo}">${demo.slice(1)}</option>`)
     .join('\n');
 
-    app['_default'].run();
+    app['_ch5_5_simpletexcoords'].run();
 
     /** @type HTMLSelectElement */
     let select = document.getElementById('select');
