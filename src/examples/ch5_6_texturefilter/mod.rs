@@ -45,7 +45,7 @@ impl Application for App {
       in vec2 pos;
       out vec2 tc;
 
-      uniform mat4 mat = mat4(1.0);
+      uniform mat4 mat;
 
       void main() {
         gl_Position = mat * vec4(pos, 0.0, 1.0);

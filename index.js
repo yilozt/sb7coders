@@ -1,6 +1,6 @@
 // For more comments about what's going on here, check out the `hello_world`
 // example.
-import('./pkg')
+import('./pkg/sb7')
   .then(app => {
     const demos = [
       '_default',
@@ -11,7 +11,8 @@ import('./pkg')
       '_ch5_3_spinningcubes',
       '_ch5_4_simpletexture',
       '_ch5_5_simpletexcoords',
-      '_ch5_6_texturefilter'
+      '_ch5_6_texturefilter',
+      '_ch5_7_tunnel'
     ];
 
     let inner_html = demos.map(demo => `<option value="${demo}">${demo.slice(1)}</option>`)

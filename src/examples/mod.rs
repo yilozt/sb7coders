@@ -35,3 +35,4 @@ def_exam!(ch5_3_spinningcubes, _ch5_3_spinningcubes);
 def_exam!(ch5_4_simpletexture, _ch5_4_simpletexture);
 def_exam!(ch5_5_simpletexcoords, _ch5_5_simpletexcoords);
 def_exam!(ch5_6_texturefilter, _ch5_6_texturefilter);
+def_exam!(ch5_7_tunnel, _ch5_7_tunnel);

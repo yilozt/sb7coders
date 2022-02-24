@@ -1,7 +1,7 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const webpack = require('webpack');
-const WasmPackPlugin = require("@wasm-tool/wasm-pack-plugin");
+const WatchExternalFilesPlugin = require('webpack-watch-files-plugin');
 
 module.exports = {
     entry: './index.js',
@@ -13,9 +13,14 @@ module.exports = {
         new HtmlWebpackPlugin({
             template: 'index.html'
         }),
-      new WasmPackPlugin({
-          crateDirectory: path.resolve(__dirname, ".")
-      }),
+        new WatchExternalFilesPlugin.default({
+            files: [
+                path.resolve(__dirname, "./pkg"),
+            ]
+        }),
+        // new WasmPackPlugin({
+        //     crateDirectory: path.resolve(__dirname, "./pkg")
+        // }),
         // Have this example work in Edge which doesn't ship `TextEncoder` or
         // `TextDecoder` at this time.
         new webpack.ProvidePlugin({
@@ -26,5 +31,9 @@ module.exports = {
     mode: 'development',
     experiments: {
         asyncWebAssembly: true
+   },
+   watchOptions: {
+       aggregateTimeout: 500
+       // poll: 200, is not necessary as long as you remove pkg/* before building your wasm files
    }
 };

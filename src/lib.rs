@@ -28,4 +28,12 @@ pub mod prelude {
   pub use std::ptr::addr_of;
   pub use std::mem::size_of;
   pub use std::mem::size_of_val;
+
+  #[macro_export]
+  macro_rules! log {
+    ($($t: tt)*) => {
+      web_sys::console::log_1(&format!($($t)*).into())
+    };
+  }
+  pub use crate::log;
 }
