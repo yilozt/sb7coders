@@ -11,8 +11,6 @@ import('./pkg/sb7')
 
     demos.splice(0, 0, '_default');
 
-    console.log(demos);
-
     let inner_html = demos.map(demo => `<option value="${demo}">${demo.slice(1)}</option>`)
     .join('\n');
 

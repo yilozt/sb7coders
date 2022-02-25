@@ -22,7 +22,10 @@
 // gl.MIRROR_CLAMP_TO_EDGE and gl.CLAMP_TO_BORDER are NOT supported in WebGL2
 // So this demo will use special texture to simulate it.
 
+use std::fmt::Display;
+
 use image::EncodableLayout;
+use wasm_bindgen::{JsCast, prelude::Closure};
 
 use crate::prelude::*;
 
@@ -111,6 +114,38 @@ impl Application for App {
     gl.tex_parameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE as _);
 
     gl.draw_arrays(gl::TRIANGLE_STRIP, 0, 4);
+  }
+
+  fn ui(&mut self, _gl: &web_sys::WebGl2RenderingContext, ui: &web_sys::Element) {
+    ui.set_inner_html(r#"
+      <lable><input name="mir_settings" type="radio" value="0"/>GL_MIRROR_CLAMP_TO_EDGE</label>
+      <lable><input name="mir_settings" type="radio" value="1"/>GL_CLAMP_TO_BORDER</label>
+    "#);
+
+    let radios = ui.query_selector_all("input[type=radio]").unwrap();
+    match self.display_mode {
+      DisplayMode::ClampToBorder => {
+        let r:web_sys::HtmlInputElement = radios.get(1).unwrap().dyn_into().unwrap();
+        r.set_checked(true);
+      },
+      DisplayMode::MirrorClampToEdge => {
+        let r:web_sys::HtmlInputElement = radios.get(0).unwrap().dyn_into().unwrap();
+        r.set_checked(true);
+      },
+    }
+
+    let closure = Closure::wrap(Box::new(|e: web_sys::Event| {
+      let r: web_sys::HtmlInputElement = e.target().unwrap().dyn_into().unwrap();
+      match r.value().as_str() {
+        "0" => unsafe { super::ch5_9_mirrorclampedge.display_mode = DisplayMode::MirrorClampToEdge},
+        "1" => unsafe { super::ch5_9_mirrorclampedge.display_mode = DisplayMode::ClampToBorder},
+        _ => unreachable!()
+      }
+    }) as Box<dyn FnMut(_)>);
+    for i in 0..radios.length() {
+      radios.get(i).unwrap().add_event_listener_with_callback("change", closure.as_ref().unchecked_ref()).unwrap();
+    }
+    closure.forget();
   }
 
   fn shutdown(&mut self, gl: &gl) {

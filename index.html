@@ -2,10 +2,55 @@
 <html>
   <head>
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
+    <style>
+      body {
+        max-width: 800px;
+        margin: 64px auto;
+        margin-bottom: 0;
+        text-align: right;
+      }
+
+      #app details {
+        margin: 24px 0;
+      }
+
+      #app summary::marker {
+        color: transparent;
+      }
+
+      #app summary {
+        font-size: 1.6rem;
+        cursor: pointer;
+      }
+
+      #app details {
+        display: block;
+        max-width: fit-content;
+        margin: 0 0 0 auto;
+        background-image: linear-gradient(to left, transparent 0%, #000 0%, #000 100%, transparent 100%);
+        background-position: 0px 1.3em;
+        background-repeat: no-repeat;
+        background-size: 0% 2px;
+        transition: background-size 300ms ease;
+      }
+
+      #app details[open] {
+        background-size: 100% 2px;
+      }
+
+      #select {
+        border: none;
+        background: black;
+        color: white;
+        border-radius: 8px;
+        margin-left: 20px;
+      }
+    </style>
   </head>
   <body>
-    <h1 id="title">Hello, Rust!</h1>
-    <canvas id="canvas" height="600" width="800"></canvas>
+    <div id="app">
+      Loading...
+    </div>
     <div>
       Demos to run: <select id="select"></select>
     </div>

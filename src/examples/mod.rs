@@ -16,8 +16,8 @@ macro_rules! def_exam {
 
     #[wasm_bindgen]
     impl $export {
-      pub fn run() {
-        unsafe { $mod.run(addr_of!($mod) as _) };
+      pub fn run(width: Option<u32>, height: Option<u32>, id: Option<String>) {
+        unsafe { $mod.run(addr_of!($mod) as _, width, height, id) };
       }
       pub fn stop() {
         unsafe { $mod.close_app(addr_of!($mod) as _) };

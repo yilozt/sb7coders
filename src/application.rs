@@ -53,16 +53,41 @@ pub trait Application: 'static {
                 title:  "", }
   }
 
-  fn run(&'static mut self, ptr: usize)
+  fn run(&'static mut self, ptr: usize, width: Option<u32>, height: Option<u32>, id: Option<String>)
     where Self: 'static
   {
-    let canvas = web_sys::window().unwrap()
+    let mut info = self.init();
+    info.width = width.unwrap_or(info.width);
+    info.height = height.unwrap_or(info.height);
+    let id = id.unwrap_or("app".into());
+
+    let app: web_sys::Element = web_sys::window().unwrap()
                                   .document()
                                   .unwrap()
-                                  .get_element_by_id("canvas")
-                                  .unwrap();
+                                  .get_element_by_id(&id)
+                                  .unwrap().dyn_into().unwrap();
 
-    let canvas: web_sys::HtmlCanvasElement = canvas.dyn_into().unwrap();
+    if app.query_selector("#canvas").unwrap().is_none() {
+      app.set_inner_html(r#"
+        <canvas id="canvas"></canvas>  
+        <details>
+          <summary id="title">Hello, Rust! (Loading.....)</summary>
+          <div id="ui"></div>
+        </details>
+      "#);
+    }
+
+    let canvas: web_sys::HtmlCanvasElement = app.query_selector("#canvas").unwrap()
+                                                .unwrap().dyn_into().unwrap();
+
+    canvas.set_width(info.width);
+    canvas.set_height(info.height);
+
+    let ui = app.query_selector("#ui").unwrap().unwrap();
+    if id == "app" {
+      ui.set_inner_html("");
+    }
+
     let gl: web_sys::WebGl2RenderingContext = canvas.get_context("webgl2")
                                                     .unwrap()
                                                     .unwrap()
@@ -71,7 +96,6 @@ pub trait Application: 'static {
 
     let performance = web_sys::window().unwrap().performance().unwrap();
 
-    let info = self.init();
 
     if let Some(h1) = web_sys::window().unwrap()
                                        .document()
@@ -84,6 +108,7 @@ pub trait Application: 'static {
     gl.viewport(0, 0, info.width as _, info.height as _);
 
     self.startup(&gl);
+    self.ui(&gl, &ui);
 
     // register running app
     unsafe {
@@ -94,6 +119,7 @@ pub trait Application: 'static {
     let g = f.clone();
 
     let app = Rc::new(RefCell::new(self));
+
     // let _app = app.clone();
     let _gl = gl.clone();
 
@@ -117,6 +143,10 @@ pub trait Application: 'static {
 
   fn startup(&mut self, _gl: &web_sys::WebGl2RenderingContext)
     where Self: 'static
+  {
+  }
+
+  fn ui(&mut self, _gl: &web_sys::WebGl2RenderingContext, _ui: &web_sys::Element)
   {
   }
 

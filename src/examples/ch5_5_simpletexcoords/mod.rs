@@ -20,8 +20,11 @@
 // DEALINGS IN THE SOFTWARE.
 
 use image::EncodableLayout;
+use wasm_bindgen::{prelude::Closure, JsCast};
 
 use crate::prelude::*;
+
+use super::ch5_5_simpletexcoords;
 
 #[derive(Default)]
 struct Uniforms {
@@ -52,32 +55,24 @@ impl Application for App {
     }
 
     let tex_data = tex_data! {
-      B, W, B, W, B, W, B, W, B, W, B, W, B, W, B, W,
-      W, B, W, B, W, B, W, B, W, B, W, B, W, B, W, B,
-      B, W, B, W, B, W, B, W, B, W, B, W, B, W, B, W,
-      W, B, W, B, W, B, W, B, W, B, W, B, W, B, W, B,
-      B, W, B, W, B, W, B, W, B, W, B, W, B, W, B, W,
-      W, B, W, B, W, B, W, B, W, B, W, B, W, B, W, B,
-      B, W, B, W, B, W, B, W, B, W, B, W, B, W, B, W,
-      W, B, W, B, W, B, W, B, W, B, W, B, W, B, W, B,
-      B, W, B, W, B, W, B, W, B, W, B, W, B, W, B, W,
-      W, B, W, B, W, B, W, B, W, B, W, B, W, B, W, B,
-      B, W, B, W, B, W, B, W, B, W, B, W, B, W, B, W,
-      W, B, W, B, W, B, W, B, W, B, W, B, W, B, W, B,
-      B, W, B, W, B, W, B, W, B, W, B, W, B, W, B, W,
-      W, B, W, B, W, B, W, B, W, B, W, B, W, B, W, B,
-      B, W, B, W, B, W, B, W, B, W, B, W, B, W, B, W,
-      W, B, W, B, W, B, W, B, W, B, W, B, W, B, W, B,
+      B, W, B, W, B, W, B, W,
+      W, B, W, B, W, B, W, B,
+      B, W, B, W, B, W, B, W,
+      W, B, W, B, W, B, W, B,
+      B, W, B, W, B, W, B, W,
+      W, B, W, B, W, B, W, B,
+      B, W, B, W, B, W, B, W,
+      W, B, W, B, W, B, W, B,
     };
 
     self.tex_object[0] = gl.create_texture();
     gl.bind_texture(gl::TEXTURE_2D, self.tex_object[0].as_ref());
 
-    gl.tex_storage_2d(gl::TEXTURE_2D, 1, gl::RGBA8, 16, 16);
+    gl.tex_storage_2d(gl::TEXTURE_2D, 1, gl::RGBA8, 8, 8);
 
 
     let view = unsafe {js_sys::Uint8Array::view(tex_data.as_slice()) };
-    gl.tex_sub_image_2d_with_i32_and_i32_and_u32_and_type_and_opt_array_buffer_view(gl::TEXTURE_2D, 0, 0, 0, 16, 16, gl::RGBA, gl::UNSIGNED_BYTE, Some(&view)).unwrap();
+    gl.tex_sub_image_2d_with_i32_and_i32_and_u32_and_type_and_opt_array_buffer_view(gl::TEXTURE_2D, 0, 0, 0, 8, 8, gl::RGBA, gl::UNSIGNED_BYTE, Some(&view)).unwrap();
 
     gl.tex_parameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST as _);
     gl.tex_parameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as _);
@@ -119,7 +114,7 @@ impl Application for App {
     gl.clear_depth(1.0);
     gl.clear(gl::DEPTH_BUFFER_BIT);
 
-    gl.bind_texture(gl::TEXTURE_2D, self.tex_object[1].as_ref());
+    gl.bind_texture(gl::TEXTURE_2D, self.tex_object[self.tex_index].as_ref());
 
     let mv_proj = translate(0.0, 0.0, -3.0)
                   * rotate_with_axis(current_time as f32 * 19.3, 0.0, 1.0, 0.0)
@@ -130,6 +125,34 @@ impl Application for App {
                                            &unsafe {js_sys::Float32Array::view_mut_raw(addr_of!(mv_proj) as _, 16).into()});
 
     self.object.render(gl);
+  }
+
+  fn ui(&mut self, _gl: &web_sys::WebGl2RenderingContext, ui: &web_sys::Element) {
+    ui.set_inner_html(&format!(r#"
+      <label><input type="radio" name="tex" value="0"/>Chequer</label>
+      <label><input type="radio" name="tex" value="1"/>Pattern</label>
+    "#));
+
+    let radios = ui.query_selector_all("input[type=radio]").unwrap();
+
+    {
+      let r: web_sys::HtmlInputElement = radios.get(self.tex_index as u32).unwrap().dyn_into().unwrap();
+      r.set_checked(true);
+    }
+
+    for i in 0..radios.length() {
+      let radio: web_sys::HtmlInputElement = radios.get(i).unwrap().dyn_into().unwrap();
+      let  closure = Closure::wrap(Box::new(|e: web_sys::Event| {
+        let radio: web_sys::HtmlInputElement = e.target().unwrap().dyn_into().unwrap();
+        match radio.value().as_str() {
+          "0" => unsafe { ch5_5_simpletexcoords.set_tex_index(0) },
+          "1" => unsafe { ch5_5_simpletexcoords.set_tex_index(1) },
+          _ => unreachable!(),
+        };
+      }) as Box<dyn FnMut(_)>);
+      radio.add_event_listener_with_callback("change", closure.as_ref().unchecked_ref()).unwrap();
+      closure.forget();
+    }
   }
 
   fn shutdown(&mut self, gl: &gl) {
@@ -165,5 +188,9 @@ impl App {
   fn on_resize(&self, gl: &gl, width: i32, height: i32) {
     let proj_matrix = perspective(50.0, width as f32 / height as f32, 0.01, 1000.0);
     gl.uniform_matrix4fv_with_f32_sequence(self.uniforms.proj_matrix.as_ref(), false, &unsafe { js_sys::Float32Array::view_mut_raw(addr_of!(proj_matrix) as _, 16) }.into());
+  }
+
+  fn set_tex_index(&mut self, i: usize) {
+    self.tex_index = i;
   }
 }
