@@ -9,3 +9,5 @@ cargo watch -i "pkg/*" -s "rm -rf ./pkg && wasm-pack build --release -d pkg"
 yarn serve
 ```
 visit [http://127.0.0.1:8080/](http://127.0.0.1:8080/) in your browser.
+
+[yilozt.github.io/sb7coders](https://yilozt.github.io/sb7coders)
