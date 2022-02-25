@@ -44,4 +44,5 @@ exams!(
   ch5_6_texturefilter,    _ch5_6_texturefilter,
   ch5_7_tunnel,           _ch5_7_tunnel,
   ch5_8_wrapmodes,        _ch5_8_wrapmodes,
+  ch5_9_mirrorclampedge,  _ch5_9_mirrorclampedge
 );

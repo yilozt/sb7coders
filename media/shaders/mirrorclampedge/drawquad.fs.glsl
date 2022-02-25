@@ -1,6 +1,8 @@
-#version 430 core
+#version 300 es
+precision mediump float;
 
-layout (binding = 0) uniform sampler2D tex;
+uniform bool is_mirror;
+uniform sampler2D tex;
 
 layout (location = 0) out vec4 color;
 
@@ -8,5 +10,12 @@ in vec2 uv;
 
 void main(void)
 {
-    color = texture(tex, uv);
+    if (is_mirror)
+    {
+        color = texture(tex, uv * 0.5 + 0.5);
+    }
+    else
+    {
+        color = texture(tex, uv);
+    }
 }

@@ -41,7 +41,6 @@ pub trait Application: 'static {
   }
 
   fn should_close(&self, ptr: usize) -> bool {
-    web_sys::console::log_1(&format!("render ...{}", ptr).into());
     unsafe { APP_RUNNING.get(&ptr).is_none() }
   }
 
