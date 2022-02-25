@@ -141,8 +141,9 @@ impl Application for App {
     }
     
     gl.clear_color(0.0, 0.0, 0.0, 1.0);
+    gl.clear(gl::COLOR_BUFFER_BIT);
     gl.clear_depth(1.0);
-    gl.clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
+    gl.clear(gl::DEPTH_BUFFER_BIT);
     gl.draw_arrays(gl::TRIANGLES, 0, 36);
   }
 

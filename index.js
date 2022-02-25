@@ -3,6 +3,12 @@
 import('./pkg/sb7')
   .then(async app => {
     const demos = Object.keys(app).filter(v => v.match(/^_c/));
+    demos.sort((a, b) => {
+      let [cha, numa] = a.slice(3).split('_');
+      let [chb, numb] = b.slice(3).split('_');
+      return (Number(cha) * 100 + Number(numa)) > (Number(chb) * 100 + Number(numb))
+    });
+
     demos.splice(0, 0, '_default');
 
     console.log(demos);
@@ -22,7 +28,7 @@ import('./pkg/sb7')
       old_val = demo;  
     }
 
-    let old_val = select.value = '_default';
+    let old_val = select.value = demos[demos.length - 1];
     select.onchange = (e) => {
       if (old_val !== e.value) {
         load(select.value);

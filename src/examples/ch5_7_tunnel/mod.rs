@@ -93,7 +93,7 @@ impl Application for App {
       fn init_tex(gl: &gl, fmt: u32, channel: u32, width: u32, height: u32, img: &[u8]) -> Option<WebGlTexture>{
         let tex = gl.create_texture();
         gl.bind_texture(gl::TEXTURE_2D, tex.as_ref());
-        gl.tex_storage_2d(gl::TEXTURE_2D, 9, fmt, width as _, height as _);
+        gl.tex_storage_2d(gl::TEXTURE_2D, 7, fmt, width as _, height as _);
         gl.tex_sub_image_2d_with_i32_and_i32_and_u32_and_type_and_u8_array_and_src_offset(gl::TEXTURE_2D, 0, 0, 0, width as _, height as _, channel, gl::UNSIGNED_BYTE, img, 0).unwrap();
         gl.generate_mipmap(gl::TEXTURE_2D);
         tex

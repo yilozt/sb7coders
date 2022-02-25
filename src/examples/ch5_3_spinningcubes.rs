@@ -76,7 +76,7 @@ impl Application for App {
     let vs_source = "#version 300 es
       precision mediump float;
 
-      in vec4 position;
+      layout (location = 0) in vec4 position;
       
       out vec4 fs_in;
 
@@ -118,14 +118,16 @@ impl Application for App {
     self.program = program;
 
     gl.enable(gl::DEPTH_TEST);
+    gl.depth_func(gl::LEQUAL);
   }
 
   fn render(&self, gl: &gl, current_time: f64) {
     let current_time = current_time as f32;
 
     gl.clear_color(0.0, 0.0, 0.0, 1.0);
+    gl.clear(gl::COLOR_BUFFER_BIT);
     gl.clear_depth(1.0);
-    gl.clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
+    gl.clear(gl::DEPTH_BUFFER_BIT);
 
     let AppConfig { width, height, .. }= self.info();
     let proj_matrix = perspective(50.0, width as f32 / height as f32, 0.01, 1000.0);

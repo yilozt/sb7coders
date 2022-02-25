@@ -3,5 +3,6 @@
 /_tmp
 /pkg
 /node_modules
+/dist
 Cargo.lock
 yarn.lock
