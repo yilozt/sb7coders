@@ -1,19 +1,11 @@
 // For more comments about what's going on here, check out the `hello_world`
 // example.
 import('./pkg/sb7')
-  .then(app => {
-    const demos = [
-      '_default',
-      '_ch3_1_vertexattr',
-      '_ch3_2_transdata',
-      '_ch5_1_vao',
-      '_ch5_2_spinningcube',
-      '_ch5_3_spinningcubes',
-      '_ch5_4_simpletexture',
-      '_ch5_5_simpletexcoords',
-      '_ch5_6_texturefilter',
-      '_ch5_7_tunnel'
-    ];
+  .then(async app => {
+    const demos = Object.keys(app).filter(v => v.match(/^_c/));
+    demos.splice(0, 0, '_default');
+
+    console.log(demos);
 
     let inner_html = demos.map(demo => `<option value="${demo}">${demo.slice(1)}</option>`)
     .join('\n');
@@ -24,7 +16,7 @@ import('./pkg/sb7')
     let select = document.getElementById('select');
     select.innerHTML = inner_html;
 
-    const load = (demo) => {
+    const load = async (demo) => {
       app[old_val].stop();
       app[demo].run();
       old_val = demo;  
