@@ -76,7 +76,7 @@ impl Application for App {
       uniform sampler2D tex;
 
       void main(void) {
-        color = texture(tex, tc);
+        color = texture(tex, tc * 2.0);
       }
     ";
 
@@ -144,7 +144,7 @@ impl Application for App {
       let proj_mat = {
         let AppConfig { width, height, .. } = self.info();
         let aspect = width as f32 / height as f32;
-        perspective(20.0, aspect, 0.1, 100.0)
+        perspective(45.0, aspect, 0.1, 100.0)
       };
       let mvp = proj_mat * mv_matrix;
 

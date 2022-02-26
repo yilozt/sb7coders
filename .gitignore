@@ -1,8 +1,8 @@
 /target
 /deps
 /_tmp
-/pkg
+/pkg*
 /node_modules
-/dist
+/dist*
 Cargo.lock
 yarn.lock

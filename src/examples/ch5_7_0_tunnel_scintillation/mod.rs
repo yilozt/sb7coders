@@ -20,6 +20,7 @@
 // DEALINGS IN THE SOFTWARE.
 
 use image::EncodableLayout;
+use wasm_bindgen::{JsCast, prelude::Closure};
 use crate::prelude::*;
 
 #[derive(Default)]
@@ -31,12 +32,13 @@ struct Uniforms {
 
 #[derive(Default)]
 pub struct App {
-  render_prog: Option<WebGlProgram>,
-  render_vao:  Option<WebGlVertexArrayObject>,
-  uniforms:    Uniforms,
-  tex_wall:    Option<WebGlTexture>,
-  tex_ceiling: Option<WebGlTexture>,
-  tex_floor:   Option<WebGlTexture>,
+  render_prog:    Option<WebGlProgram>,
+  render_vao:     Option<WebGlVertexArrayObject>,
+  uniforms:       Uniforms,
+  tex_wall:       Option<WebGlTexture>,
+  tex_ceiling:    Option<WebGlTexture>,
+  tex_floor:      Option<WebGlTexture>,
+  mipmap_enabled: bool,
 }
 
 impl Application for App {
@@ -76,7 +78,7 @@ impl Application for App {
       uniform sampler2D tex;
 
       void main(void) {
-        color = texture(tex, tc);
+        color = texture(tex, tc * 2.0);
       }
     ";
 
@@ -93,8 +95,9 @@ impl Application for App {
       fn init_tex(gl: &gl, fmt: u32, channel: u32, width: u32, height: u32, img: &[u8]) -> Option<WebGlTexture>{
         let tex = gl.create_texture();
         gl.bind_texture(gl::TEXTURE_2D, tex.as_ref());
-        gl.tex_storage_2d(gl::TEXTURE_2D, 1, fmt, width as _, height as _);
+        gl.tex_storage_2d(gl::TEXTURE_2D, 8, fmt, width as _, height as _);
         gl.tex_sub_image_2d_with_i32_and_i32_and_u32_and_type_and_u8_array_and_src_offset(gl::TEXTURE_2D, 0, 0, 0, width as _, height as _, channel, gl::UNSIGNED_BYTE, img, 0).unwrap();
+        gl.generate_mipmap(gl::TEXTURE_2D);
         tex
       }
 
@@ -143,7 +146,7 @@ impl Application for App {
       let proj_mat = {
         let AppConfig { width, height, .. } = self.info();
         let aspect = width as f32 / height as f32;
-        perspective(20.0, aspect, 0.1, 100.0)
+        perspective(45.0, aspect, 0.1, 100.0)
       };
       let mvp = proj_mat * mv_matrix;
 
@@ -151,8 +154,27 @@ impl Application for App {
 
       gl.bind_vertex_array(self.render_vao.as_ref());
       gl.bind_texture(gl::TEXTURE_2D, tex.as_ref());
+      gl.tex_parameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, if self.mipmap_enabled { gl::LINEAR_MIPMAP_LINEAR } else { gl::LINEAR } as _);
       gl.draw_arrays(gl::TRIANGLES, 0, 6);
     }
+  }
+
+  fn ui(&mut self, _gl: &web_sys::WebGl2RenderingContext, ui: &web_sys::Element) {
+    ui.set_inner_html(r#"
+    <label><input type="checkbox"/> Enable mipmap filter </label>
+    "#);
+
+    let checkbox: web_sys::HtmlInputElement = ui.query_selector(r#"input[type="checkbox"]"#).unwrap().unwrap().dyn_into().unwrap();
+    checkbox.set_checked(self.mipmap_enabled);
+
+    let closure = Closure::wrap(Box::new(|e: web_sys::Event| {
+      let checkbox: web_sys::HtmlInputElement = e.target().unwrap().dyn_into().unwrap();
+      unsafe { super::ch5_7_0_tunnel_scintillation.mipmap_enabled = checkbox.checked(); }
+    }) as Box<dyn FnMut(_)>);
+
+    checkbox.add_event_listener_with_callback("change", closure.as_ref().unchecked_ref()).unwrap();
+
+    closure.forget();
   }
 
   fn shutdown(&mut self, gl: &gl) {
