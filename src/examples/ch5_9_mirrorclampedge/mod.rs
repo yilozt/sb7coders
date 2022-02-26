@@ -22,8 +22,6 @@
 // gl.MIRROR_CLAMP_TO_EDGE and gl.CLAMP_TO_BORDER are NOT supported in WebGL2
 // So this demo will use special texture to simulate it.
 
-use std::fmt::Display;
-
 use image::EncodableLayout;
 use wasm_bindgen::{JsCast, prelude::Closure};
 
@@ -89,7 +87,6 @@ impl Application for App {
     self.load_shaders(gl);
 
     self.vao = gl.create_vertex_array();
-    self.display_mode = DisplayMode::ClampToBorder;
   }
 
   fn render(&self, gl: &gl, _current_time: f64) {

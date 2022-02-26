@@ -76,12 +76,12 @@ impl Application for App {
     self.prog = program::link_from_shaders(gl, &[vs.as_ref(), fs.as_ref()], true);
 
     // self.tex = ktx::file::load(gl, include_bytes!("../../../media/textures/rightarrows.ktx")).unwrap().0;
-    match image::load_from_memory(include_bytes!("assert/rightarrow.png")) {
-      Ok(image::DynamicImage::ImageRgba8(img)) => {
+    match image::load_from_memory(include_bytes!("assert/rightarrow.jpg")) {
+      Ok(image::DynamicImage::ImageRgb8(img)) => {
         self.tex = gl.create_texture();
         gl.bind_texture(gl::TEXTURE_2D, self.tex.as_ref());
-        gl.tex_storage_2d(gl::TEXTURE_2D, 1, gl::RGBA8, img.width() as _, img.height() as _);
-        gl.tex_sub_image_2d_with_i32_and_i32_and_u32_and_type_and_u8_array_and_src_offset(gl::TEXTURE_2D, 0, 0, 0, img.width() as _, img.height() as _, gl::RGBA, gl::UNSIGNED_BYTE, img.as_bytes(), 0).unwrap();
+        gl.tex_storage_2d(gl::TEXTURE_2D, 1, gl::RGB8, img.width() as _, img.height() as _);
+        gl.tex_sub_image_2d_with_i32_and_i32_and_u32_and_type_and_u8_array_and_src_offset(gl::TEXTURE_2D, 0, 0, 0, img.width() as _, img.height() as _, gl::RGB, gl::UNSIGNED_BYTE, img.as_bytes(), 0).unwrap();
         log!("[loaded]");
       },
       _ => log!("unhandled format"),

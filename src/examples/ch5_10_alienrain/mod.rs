@@ -185,7 +185,7 @@ impl App {
     self.tex_alien_array = gl.create_texture();
 
     gl.bind_texture(gl::TEXTURE_2D_ARRAY, self.tex_alien_array.as_ref());
-    gl.tex_storage_3d(gl::TEXTURE_2D_ARRAY, 1, gl::RGBA8, 256, 256, 9);
+    gl.tex_storage_3d(gl::TEXTURE_2D_ARRAY, 1, gl::RGBA8, 128, 128, 9);
 
     for (i, data) in [
       &include_bytes!("assert/1.png")[..],
@@ -198,10 +198,14 @@ impl App {
       &include_bytes!("assert/8.png")[..],
       &include_bytes!("assert/9.png")[..],
     ].iter().enumerate() {
-      if let Ok(image::DynamicImage::ImageRgba8(img)) = image::load_from_memory(data) {
-        gl.tex_sub_image_3d_with_opt_array_buffer_view(gl::TEXTURE_2D_ARRAY, 0, 0, 0, i as _, 256, 256, 1, gl::RGBA, gl::UNSIGNED_BYTE, Some(&unsafe { js_sys::Uint8Array::view(img.as_bytes()).into() })).unwrap();
-      } else {
-        log!("format of assert/{}.png should be RGBA8", i + 1);
+      match image::load_from_memory(data) {
+        Ok(image::DynamicImage::ImageRgba8(img)) => {
+          gl.tex_sub_image_3d_with_opt_array_buffer_view(gl::TEXTURE_2D_ARRAY, 0, 0, 0, i as _, 128, 128, 1, gl::RGBA, gl::UNSIGNED_BYTE, Some(&unsafe { js_sys::Uint8Array::view(img.as_bytes()).into() })).unwrap();
+        },
+        o @ _ => {
+          log!("format of assert/{}.png should be RGBA8", i + 1);
+          log!("{:?}", o);
+        }
       }
     }
     gl.bind_texture(gl::TEXTURE_2D_ARRAY, self.tex_alien_array.as_ref());

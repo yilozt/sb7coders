@@ -101,14 +101,13 @@ impl Application for App {
 
       match image::load_from_memory(data).unwrap() {
         image::DynamicImage::ImageRgb8(img) => init_tex(gl, gl::RGB8, gl::RGB, img.width(), img.height(), img.as_bytes()),
-        image::DynamicImage::ImageRgba8(img) => init_tex(gl, gl::RGBA8, gl::RGBA, img.width(), img.height(), img.as_bytes()),
         err @ _ => { log!("{:?}", err); unreachable!()}
       }
     };
 
-    self.tex_wall = load_img(include_bytes!("assert/brick.png"));
-    self.tex_ceiling = load_img(include_bytes!("assert/ceiling.png"));
-    self.tex_floor = load_img(include_bytes!("assert/floor.png"));
+    self.tex_wall = load_img(include_bytes!("assert/brick.jpg"));
+    self.tex_ceiling = load_img(include_bytes!("assert/ceiling.jpg"));
+    self.tex_floor = load_img(include_bytes!("assert/floor.jpg"));
   
     for tex in [&self.tex_wall, &self.tex_floor, &self.tex_ceiling] {
       gl.bind_texture(gl::TEXTURE_2D, tex.as_ref());

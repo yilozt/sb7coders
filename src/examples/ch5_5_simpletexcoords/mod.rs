@@ -84,14 +84,17 @@ impl Application for App {
     //   ktx::file::load(gl, include_bytes!("../../media/textures/pattern1.ktx")).unwrap()
     //                                                                           .0;
 
-    if let Ok(image::DynamicImage::ImageRgba8(img)) = image::load_from_memory(include_bytes!("assert/pattern.png")) {
-      self.tex_object[1] = gl.create_texture();
-      gl.bind_texture(gl::TEXTURE_2D, self.tex_object[1].as_ref());
-      gl.tex_storage_2d(gl::TEXTURE_2D, 1, gl::RGBA8, img.width() as _, img.height() as _);
-      gl.tex_sub_image_2d_with_i32_and_i32_and_u32_and_type_and_opt_u8_array(gl::TEXTURE_2D, 0, 0, 0, img.width() as _, img.height() as _, gl::RGBA, gl::UNSIGNED_BYTE, Some(img.as_bytes())).unwrap();
-
-      gl.tex_parameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST as _);
-      gl.tex_parameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as _);
+    match image::load_from_memory(include_bytes!("assert/pattern.jpg")) {
+      Ok(image::DynamicImage::ImageRgb8(img)) =>  {
+        self.tex_object[1] = gl.create_texture();
+        gl.bind_texture(gl::TEXTURE_2D, self.tex_object[1].as_ref());
+        gl.tex_storage_2d(gl::TEXTURE_2D, 1, gl::RGB8, img.width() as _, img.height() as _);
+        gl.tex_sub_image_2d_with_i32_and_i32_and_u32_and_type_and_opt_u8_array(gl::TEXTURE_2D, 0, 0, 0, img.width() as _, img.height() as _, gl::RGB, gl::UNSIGNED_BYTE, Some(img.as_bytes())).unwrap();
+  
+        gl.tex_parameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST as _);
+        gl.tex_parameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as _);
+      },
+      other @ _ => { log!("{:?}", other) }
     }
 
     self.object
