@@ -29,6 +29,7 @@ pub struct App {
   render_vao:      Option<WebGlVertexArrayObject>,
   rain_buffer:     Option<WebGlBuffer>, 
   tex_alien_array: Option<WebGlTexture>,
+  trans_loc:       Option<WebGlUniformLocation>,
 
   droplet_x_offset:   Vec<f32>,
   droplet_rot_speed:  Vec<f32>,
@@ -63,6 +64,7 @@ impl Application for App {
         droplet_t droplet[256];
       };
 
+      uniform mat4 trans;
 
       void main(void) {
         const vec2[4] position = vec2[4](vec2(-0.5, -0.5),
@@ -75,9 +77,9 @@ impl Application for App {
         mat2 rot = mat2(vec2(co, so),
                         vec2(-so, co));
         vec2 pos = 0.25 * rot * position[gl_VertexID];
-        gl_Position = vec4(pos.x + droplet[int(alien_index)].x_offset,
-                           pos.y + droplet[int(alien_index)].y_offset,
-                           0.5, 1.0);
+        gl_Position = trans * vec4(pos.x + droplet[int(alien_index)].x_offset,
+                                   pos.y + droplet[int(alien_index)].y_offset,
+                                   0.5, 1.0);
         alien = float(int(alien_index) % 9);
       }
     ";
@@ -113,6 +115,16 @@ impl Application for App {
 
     gl.delete_shader(vs.as_ref());
     gl.delete_shader(fs.as_ref());
+
+    self.trans_loc = gl.get_uniform_location(self.render_prog.as_ref().unwrap(), "trans");
+    log!("{:?}", self.trans_loc);
+    let trans = perspective(45.0, {
+      let AppConfig { width, height, .. } = self.info();
+      width as f32 / height as f32
+    }, 0.1, 1000.) * translate(0.0, 0.0, -1.8);
+
+    gl.use_program(self.render_prog.as_ref());
+    gl.uniform_matrix4fv_with_f32_sequence(self.trans_loc.as_ref(), false, &unsafe { js_sys::Float32Array::view_mut_raw(addr_of!(trans) as _, 16).into() });
 
     self.render_vao = gl.create_vertex_array();
     gl.bind_vertex_array(self.render_vao.as_ref());

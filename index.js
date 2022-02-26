@@ -1,4 +1,5 @@
 // For more comments about what's going on here, check out the `hello_world`
+
 // example.
 import('./pkg/sb7')
   .then(async app => {
@@ -14,19 +15,20 @@ import('./pkg/sb7')
     let inner_html = demos.map(demo => `<option value="${demo}">${demo.slice(1)}</option>`)
     .join('\n');
 
-    app[demos[demos.length - 1]].run();
 
     /** @type HTMLSelectElement */
     let select = document.getElementById('select');
     select.innerHTML = inner_html;
 
+    app[demos[demos.length - 1]].run(1200, 1200 * 6 / 8);
+    let old_val = select.value = demos[demos.length - 1];
+  
     const load = async (demo) => {
       app[old_val].stop();
-      app[demo].run();
+      app[demo].run(1200, 1200 * 6 / 8);
       old_val = demo;  
     }
 
-    let old_val = select.value = demos[demos.length - 1];
     select.onchange = (e) => {
       if (old_val !== e.value) {
         load(select.value);

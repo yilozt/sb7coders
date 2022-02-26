@@ -136,6 +136,7 @@ pub mod sb6m {
 }
 
 #[derive(Default)]
+#[derive(Clone)]
 pub struct Object {
   data_buf:        Option<WebGlBuffer>,
   vao:             Option<WebGlVertexArrayObject>,

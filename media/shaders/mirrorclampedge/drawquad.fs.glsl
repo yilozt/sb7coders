@@ -12,10 +12,10 @@ void main(void)
 {
     if (is_mirror)
     {
-        color = texture(tex, uv * 0.5 + 0.5);
+        color = texture(tex, ((uv * 0.5) * vec2(1.5, 1.0) + 0.5));
     }
     else
     {
-        color = texture(tex, uv);
+        color = texture(tex, uv * vec2(1.5, 1.0));
     }
 }

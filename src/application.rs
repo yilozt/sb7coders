@@ -71,7 +71,7 @@ pub trait Application: 'static {
       app.set_inner_html(r#"
         <canvas id="canvas"></canvas>  
         <details>
-          <summary id="title">Hello, Rust! (Loading.....)</summary>
+          <summary id="title" class="apptitle">Hello, Rust! (Loading.....)</summary>
           <div id="ui"></div>
         </details>
       "#);
@@ -97,10 +97,7 @@ pub trait Application: 'static {
     let performance = web_sys::window().unwrap().performance().unwrap();
 
 
-    if let Some(h1) = web_sys::window().unwrap()
-                                       .document()
-                                       .unwrap()
-                                       .get_element_by_id("title")
+    if let Some(h1) = app.query_selector("#title").unwrap()
     {
       h1.set_inner_html(info.title);
     }

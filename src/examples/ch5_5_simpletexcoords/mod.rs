@@ -27,12 +27,14 @@ use crate::prelude::*;
 use super::ch5_5_simpletexcoords;
 
 #[derive(Default)]
+#[derive(Clone)]
 struct Uniforms {
   mv_matrix:   Option<WebGlUniformLocation>,
   proj_matrix: Option<WebGlUniformLocation>,
 }
 
 #[derive(Default)]
+#[derive(Clone)]
 pub struct App {
   tex_object:  [Option<WebGlTexture>; 2],
   tex_index:   usize,

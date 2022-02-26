@@ -38,6 +38,13 @@ pub struct App {
 }
 
 impl Application for App {
+  fn init(&self) -> AppConfig {
+    AppConfig {
+      title: "Texture Filter",
+      ..AppConfig::default()
+    }
+  }
+
   fn startup(&mut self, gl: &gl) {
     let vs_src = "#version 300 es
       precision mediump float;
@@ -115,7 +122,7 @@ impl Application for App {
     let current_time = (current_time * 30.0) as f32;
 
     for (pos, filter) in [(-0.6f32, TexFilter::Linear), (0.6f32, TexFilter::Nearst)] {
-      let mat: Mat4 = perspective(45.0, aspect, 0.1, 1000.0)
+      let mat: Mat4 = perspective(25.0, aspect, 0.1, 1000.0)
       * translate(pos, 0.0, -3.0)
       * rotate_with_axis(current_time, 0.0, 1.0, 0.0);
 

@@ -9,7 +9,7 @@ pub struct App {
 
 impl Application for App {
   fn init(&self) -> AppConfig {
-    AppConfig { title: "Spinny Cubes", ..Default::default() }
+    AppConfig { title: "Atomic Counter", ..Default::default() }
   }
 
   fn startup(&mut self, gl: &gl) {
@@ -80,17 +80,17 @@ impl Application for App {
     let vs_source = "#version 300 es
       precision highp float;
 
-
-      layout (location = 0) in vec4 position;
-      
-      out vec4 fs_in;
-
-      uniform mat4 mv_matrix;
-      uniform mat4 proj_matrix;
-
+      in vec4 position;
+      uniform mat4 mv_mat;
+      uniform mat4 proj_mat;
+  
+      out vec4 vertex_color;
+      out float dist;
+  
       void main() {
-        gl_Position =  proj_matrix * mv_matrix * position;
-        fs_in = position * 2.0 + vec4(0.5, 0.5, 0.5, 0.0);
+        gl_Position = proj_mat * mv_mat * position;
+        vertex_color = position * 2.0 + vec4(0.5, 0.5, 0.5, 0.0);
+        dist = length(mv_mat * vec4(vec3(0.0), 1.0));
       }
     ";
     let vs = gl.create_shader(gl::VERTEX_SHADER).unwrap();
@@ -100,12 +100,13 @@ impl Application for App {
     let fs_source = "#version 300 es
       precision highp float;
 
+      in vec4 vertex_color;
+      in float dist;
       out vec4 color;
-      
-      in vec4 fs_in;
-
       void main() {
-        color = fs_in;
+        float brightness = dist * 0.11;
+        brightness = 1.0 - brightness * brightness * brightness * brightness;
+        color = vec4(vec3(brightness), 1.0);
       }
     ";
     let fs = gl.create_shader(gl::FRAGMENT_SHADER).unwrap();
@@ -123,23 +124,21 @@ impl Application for App {
     self.program = program;
 
     gl.enable(gl::DEPTH_TEST);
-    gl.depth_func(gl::LEQUAL);
   }
 
   fn render(&self, gl: &gl, current_time: f64) {
     let current_time = current_time as f32;
 
-    gl.use_program(self.program.as_ref());
-
     gl.clear_color(0.0, 0.0, 0.0, 1.0);
     gl.clear(gl::COLOR_BUFFER_BIT);
     gl.clear_depth(1.0);
     gl.clear(gl::DEPTH_BUFFER_BIT);
+    gl.draw_arrays(gl::TRIANGLES, 0, 36);
 
     let AppConfig { width, height, .. }= self.info();
     let proj_matrix = perspective(45.0, width as f32 / height as f32, 0.01, 1000.0);
     unsafe {
-      let location = gl.get_uniform_location(self.program.as_ref().unwrap(), "proj_matrix");
+      let location = gl.get_uniform_location(self.program.as_ref().unwrap(), "proj_mat");
       gl.uniform_matrix4fv_with_f32_sequence(location.as_ref(), false, &js_sys::Float32Array::view_mut_raw(addr_of!(proj_matrix) as _, 4 * 4));  
     }
 
@@ -154,7 +153,7 @@ impl Application for App {
                         (1.7 * f).cos() * 2.0,
                         (1.3 * f).sin() * (1.5 * f).cos() * 2.0);
       unsafe {
-        let location = gl.get_uniform_location(self.program.as_ref().unwrap(), "mv_matrix");
+        let location = gl.get_uniform_location(self.program.as_ref().unwrap(), "mv_mat");
         gl.uniform_matrix4fv_with_f32_sequence(location.as_ref(), false, &js_sys::Float32Array::view_mut_raw(addr_of!(mv_matrix) as _, 4 * 4));
       }
       gl.draw_arrays(gl::TRIANGLES, 0, 36);

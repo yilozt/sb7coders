@@ -8,6 +8,10 @@ pub struct App {
 }
 
 impl Application for App {
+  fn init(&self) -> AppConfig {
+    AppConfig { title: "Spinny Cube", ..Default::default() }
+  }
+
   fn startup(&mut self, gl: &gl) {
     #[rustfmt::skip]
     let vertex_position : &[f32]= &[
@@ -74,7 +78,7 @@ impl Application for App {
     gl.enable_vertex_attrib_array(0);
 
     let vs_source = "#version 300 es
-      precision mediump float;
+      precision highp float;
 
       in vec4 position;
       
@@ -93,7 +97,7 @@ impl Application for App {
     gl.compile_shader(vs.as_ref());
         
     let fs_source = "#version 300 es
-      precision mediump float;
+      precision highp float;
 
       out vec4 color;
       
@@ -131,7 +135,7 @@ impl Application for App {
                     rotate_with_axis(current_time * 81.0, 1.0, 0.0, 0.0);
     
     let AppConfig { width, height, .. }= self.info();
-    let proj_matrix = perspective(50.0, width as f32 / height as f32, 0.01, 1000.0);
+    let proj_matrix = perspective(45.0, width as f32 / height as f32, 0.01, 1000.0);
 
     unsafe {
       let location = gl.get_uniform_location(self.program.as_ref().unwrap(), "mv_matrix");

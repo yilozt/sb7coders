@@ -29,6 +29,7 @@ pub struct App {
   tex:            Option<WebGlTexture>,
   texborder:      Option<WebGlTexture>,
   uniform_offset: Option<WebGlUniformLocation>,
+  uniform_trans:  Option<WebGlUniformLocation>,
   prog:           Option<WebGlProgram>,
 }
 
@@ -45,15 +46,16 @@ impl Application for App {
       precision mediump float;
 
       uniform vec2 offset;
+      uniform mat4 trans;
 
       out vec2 tex_coord;
 
       void main(void) {
-        const vec4 vertices[] = vec4[](vec4(-0.45, -0.45, 0.5, 1.0),
-                                       vec4( 0.45, -0.45, 0.5, 1.0),
-                                       vec4(-0.45,  0.45, 0.5, 1.0),
-                                       vec4( 0.45,  0.45, 0.5, 1.0));
-        gl_Position = vertices[gl_VertexID] + vec4(offset, 0.0, 0.0); 
+        const vec4 vertices[] = vec4[](vec4(-0.45, -0.35, 0.5, 1.0),
+                                       vec4( 0.45, -0.35, 0.5, 1.0),
+                                       vec4(-0.45,  0.35, 0.5, 1.0),
+                                       vec4( 0.45,  0.35, 0.5, 1.0));
+        gl_Position = trans *  (vertices[gl_VertexID] + vec4(offset * vec2(1.0, 0.85), 0.0, 0.0)); 
         tex_coord = vertices[gl_VertexID].xy * 3.0 + vec2(0.45 * 3.0);
       }
     ";
@@ -101,6 +103,14 @@ impl Application for App {
     gl.bind_texture(gl::TEXTURE_2D, self.tex.as_ref());
 
     self.uniform_offset = gl.get_uniform_location(self.prog.as_ref().unwrap(), "offset");
+    self.uniform_trans = gl.get_uniform_location(self.prog.as_ref().unwrap(), "trans");
+
+    let trans = perspective(45.0, {
+      let AppConfig { width, height, .. } = self.info();
+      width as f32 / height as f32
+    }, 0.1, 1000.) * translate(0., 0., -2.5);
+    gl.use_program(self.prog.as_ref());
+    gl.uniform_matrix4fv_with_f32_sequence(self.uniform_trans.as_ref(), false, &unsafe { js_sys::Float32Array::view_mut_raw(addr_of!(trans) as _, 16).into() });
 
     self.vao = gl.create_vertex_array();
     gl.bind_vertex_array(self.vao.as_ref());
@@ -108,7 +118,7 @@ impl Application for App {
 
   fn render(&self, gl: &gl, _: f64) {
 
-    gl.clear_color(0.0, 0.2, 0.0, 1.0);
+    gl.clear_color(0.2, 0.4, 0.2, 1.0);
     gl.clear(gl::COLOR_BUFFER_BIT);
 
     let wrapmodes = [gl::CLAMP_TO_EDGE, gl::REPEAT, 0xFFFFF, gl::MIRRORED_REPEAT ];
