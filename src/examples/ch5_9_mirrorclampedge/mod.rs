@@ -114,10 +114,10 @@ impl Application for App {
   }
 
   fn ui(&mut self, _gl: &web_sys::WebGl2RenderingContext, ui: &web_sys::Element) {
-    ui.set_inner_html(r#"
-      <lable><input name="mir_settings" type="radio" value="0"/>GL_MIRROR_CLAMP_TO_EDGE</label>
-      <lable><input name="mir_settings" type="radio" value="1"/>GL_CLAMP_TO_BORDER</label>
-    "#);
+    ui.set_inner_html(&format!(r#"
+      <label><input name="mir_settings" type="radio" value="0"/>GL_MIRROR_CLAMP_TO_EDGE</label>
+      <label><input name="mir_settings" type="radio" value="1"/>GL_CLAMP_TO_BORDER</label>
+    "#));
 
     let radios = ui.query_selector_all("input[type=radio]").unwrap();
     match self.display_mode {
