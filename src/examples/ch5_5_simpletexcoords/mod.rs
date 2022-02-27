@@ -19,12 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+use std::{rc::Rc, cell::Cell};
+
 use image::EncodableLayout;
 use wasm_bindgen::{prelude::Closure, JsCast};
 
 use crate::prelude::*;
-
-use super::ch5_5_simpletexcoords;
 
 #[derive(Default)]
 #[derive(Clone)]
@@ -37,7 +37,7 @@ struct Uniforms {
 #[derive(Clone)]
 pub struct App {
   tex_object:  [Option<WebGlTexture>; 2],
-  tex_index:   usize,
+  tex_index:   Rc<Cell<usize>>,
   render_prog: Option<WebGlProgram>,
   uniforms:    Uniforms,
   object:      Object,
@@ -119,7 +119,7 @@ impl Application for App {
     gl.clear_depth(1.0);
     gl.clear(gl::DEPTH_BUFFER_BIT);
 
-    gl.bind_texture(gl::TEXTURE_2D, self.tex_object[self.tex_index].as_ref());
+    gl.bind_texture(gl::TEXTURE_2D, self.tex_object[self.tex_index.get()].as_ref());
 
     let mv_proj = translate(0.0, 0.0, -3.0)
                   * rotate_with_axis(current_time as f32 * 19.3, 0.0, 1.0, 0.0)
@@ -132,7 +132,7 @@ impl Application for App {
     self.object.render(gl);
   }
 
-  fn ui(&mut self, _gl: &web_sys::WebGl2RenderingContext, ui: &web_sys::Element) {
+  fn ui(&mut self, _gl: Rc<web_sys::WebGl2RenderingContext>, ui: &web_sys::Element) {
     ui.set_inner_html(&format!(r#"
       <label><input type="radio" name="tex" value="0"/>Chequer</label>
       <label><input type="radio" name="tex" value="1"/>Pattern</label>
@@ -141,17 +141,18 @@ impl Application for App {
     let radios = ui.query_selector_all("input[type=radio]").unwrap();
 
     {
-      let r: web_sys::HtmlInputElement = radios.get(self.tex_index as u32).unwrap().dyn_into().unwrap();
+      let r: web_sys::HtmlInputElement = radios.get(self.tex_index.get() as u32).unwrap().dyn_into().unwrap();
       r.set_checked(true);
     }
 
     for i in 0..radios.length() {
       let radio: web_sys::HtmlInputElement = radios.get(i).unwrap().dyn_into().unwrap();
-      let  closure = Closure::wrap(Box::new(|e: web_sys::Event| {
+      let tex_index = self.tex_index.clone();
+      let  closure = Closure::wrap(Box::new(move |e: web_sys::Event| {
         let radio: web_sys::HtmlInputElement = e.target().unwrap().dyn_into().unwrap();
         match radio.value().as_str() {
-          "0" => unsafe { ch5_5_simpletexcoords.set_tex_index(0) },
-          "1" => unsafe { ch5_5_simpletexcoords.set_tex_index(1) },
+          "0" => tex_index.set(0),
+          "1" => tex_index.set(1),
           _ => unreachable!(),
         };
       }) as Box<dyn FnMut(_)>);
@@ -193,9 +194,5 @@ impl App {
   fn on_resize(&self, gl: &gl, width: i32, height: i32) {
     let proj_matrix = perspective(50.0, width as f32 / height as f32, 0.01, 1000.0);
     gl.uniform_matrix4fv_with_f32_sequence(self.uniforms.proj_matrix.as_ref(), false, &unsafe { js_sys::Float32Array::view_mut_raw(addr_of!(proj_matrix) as _, 16) }.into());
-  }
-
-  fn set_tex_index(&mut self, i: usize) {
-    self.tex_index = i;
   }
 }

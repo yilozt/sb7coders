@@ -22,11 +22,14 @@
 // gl.MIRROR_CLAMP_TO_EDGE and gl.CLAMP_TO_BORDER are NOT supported in WebGL2
 // So this demo will use special texture to simulate it.
 
+use std::{rc::Rc, cell::Cell};
+
 use image::EncodableLayout;
 use wasm_bindgen::{JsCast, prelude::Closure};
 
 use crate::prelude::*;
 
+#[derive(Clone, Copy)]
 enum DisplayMode {
   ClampToBorder,
   MirrorClampToEdge,
@@ -46,7 +49,7 @@ pub struct App {
   tex_mirror:   Option<WebGlTexture>,
   vao:          Option<WebGlVertexArrayObject>,
   is_mirror:    Option<WebGlUniformLocation>,
-  display_mode: DisplayMode,
+  display_mode: Rc<Cell<DisplayMode>>,
 }
 
 impl App {
@@ -96,7 +99,7 @@ impl Application for App {
     gl.bind_vertex_array(self.vao.as_ref());
     gl.use_program(self.render_prog.as_ref());
 
-    match self.display_mode {
+    match self.display_mode.get() {
       DisplayMode::MirrorClampToEdge => {
         gl.bind_texture(gl::TEXTURE_2D, self.tex_mirror.as_ref());
         gl.uniform1i(self.is_mirror.as_ref(), 1);
@@ -113,14 +116,14 @@ impl Application for App {
     gl.draw_arrays(gl::TRIANGLE_STRIP, 0, 4);
   }
 
-  fn ui(&mut self, _gl: &web_sys::WebGl2RenderingContext, ui: &web_sys::Element) {
+  fn ui(&mut self, _gl: Rc<web_sys::WebGl2RenderingContext>, ui: &web_sys::Element) {
     ui.set_inner_html(&format!(r#"
       <label><input name="mir_settings" type="radio" value="0"/>GL_MIRROR_CLAMP_TO_EDGE</label>
       <label><input name="mir_settings" type="radio" value="1"/>GL_CLAMP_TO_BORDER</label>
     "#));
 
     let radios = ui.query_selector_all("input[type=radio]").unwrap();
-    match self.display_mode {
+    match self.display_mode.get() {
       DisplayMode::ClampToBorder => {
         let r:web_sys::HtmlInputElement = radios.get(1).unwrap().dyn_into().unwrap();
         r.set_checked(true);
@@ -131,11 +134,12 @@ impl Application for App {
       },
     }
 
-    let closure = Closure::wrap(Box::new(|e: web_sys::Event| {
+    let display_mode = self.display_mode.clone();
+    let closure = Closure::wrap(Box::new(move |e: web_sys::Event| {
       let r: web_sys::HtmlInputElement = e.target().unwrap().dyn_into().unwrap();
       match r.value().as_str() {
-        "0" => unsafe { super::ch5_9_mirrorclampedge.display_mode = DisplayMode::MirrorClampToEdge},
-        "1" => unsafe { super::ch5_9_mirrorclampedge.display_mode = DisplayMode::ClampToBorder},
+        "0" => display_mode.set(DisplayMode::MirrorClampToEdge),
+        "1" => display_mode.set(DisplayMode::ClampToBorder),
         _ => unreachable!()
       }
     }) as Box<dyn FnMut(_)>);
@@ -151,8 +155,4 @@ impl Application for App {
     gl.delete_texture(self.tex_border.as_ref());
     gl.delete_texture(self.tex_mirror.as_ref());
   }
-
-  // fn ui(&mut self, ui: &imgui::Ui) {
-  //   todo!()
-  // }
 }

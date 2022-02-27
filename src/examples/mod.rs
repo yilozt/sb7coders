@@ -1,14 +1,9 @@
 use crate::application::*;
-use once_cell::sync::Lazy;
-use std::ptr::addr_of;
 use wasm_bindgen::prelude::wasm_bindgen;
 
 macro_rules! def_exam {
   ($mod: ident, $export: ident) => {
     mod $mod;
-
-    #[allow(non_upper_case_globals)]
-    static mut $mod: Lazy<$mod::App> = Lazy::new(|| $mod::App::default());
 
     #[wasm_bindgen]
     #[allow(non_camel_case_types)]
@@ -17,10 +12,10 @@ macro_rules! def_exam {
     #[wasm_bindgen]
     impl $export {
       pub fn run(width: Option<u32>, height: Option<u32>, id: Option<String>) {
-        unsafe { $mod.run(addr_of!($mod) as _, width, height, id) };
+        $mod::App::run(Box::new($mod::App::default()), width, height, id);
       }
-      pub fn stop() {
-        unsafe { $mod.close_app(addr_of!($mod) as _) };
+      pub fn stop(id: Option<String>) {
+        $mod::App::close_app(id);
       }
     }
   };

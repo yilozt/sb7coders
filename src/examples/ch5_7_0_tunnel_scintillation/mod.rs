@@ -19,6 +19,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+use std::{rc::Rc, cell::Cell};
+
 use image::EncodableLayout;
 use wasm_bindgen::{JsCast, prelude::Closure};
 use crate::prelude::*;
@@ -38,7 +40,7 @@ pub struct App {
   tex_wall:       Option<WebGlTexture>,
   tex_ceiling:    Option<WebGlTexture>,
   tex_floor:      Option<WebGlTexture>,
-  mipmap_enabled: bool,
+  mipmap_enabled: Rc<Cell<bool>>,
 }
 
 impl Application for App {
@@ -154,26 +156,32 @@ impl Application for App {
 
       gl.bind_vertex_array(self.render_vao.as_ref());
       gl.bind_texture(gl::TEXTURE_2D, tex.as_ref());
-      gl.tex_parameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, if self.mipmap_enabled { gl::LINEAR_MIPMAP_LINEAR } else { gl::LINEAR } as _);
       gl.draw_arrays(gl::TRIANGLES, 0, 6);
     }
   }
 
-  fn ui(&mut self, _gl: &web_sys::WebGl2RenderingContext, ui: &web_sys::Element) {
+  fn ui(&mut self, gl: Rc<web_sys::WebGl2RenderingContext>, ui: &web_sys::Element) where Self: 'static {
     ui.set_inner_html(r#"
     <label><input type="checkbox"/> Enable mipmap filter </label>
     "#);
 
     let checkbox: web_sys::HtmlInputElement = ui.query_selector(r#"input[type="checkbox"]"#).unwrap().unwrap().dyn_into().unwrap();
-    checkbox.set_checked(self.mipmap_enabled);
+    checkbox.set_checked(self.mipmap_enabled.get());  
 
-    let closure = Closure::wrap(Box::new(|e: web_sys::Event| {
+    let mipmap_enabled = Rc::clone(&self.mipmap_enabled);
+    let gl = gl.clone();
+    let texs = [self.tex_ceiling.clone(), self.tex_floor.clone(), self.tex_wall.clone()];
+
+    let closure = Closure::wrap(Box::new(move |e: web_sys::Event| {
       let checkbox: web_sys::HtmlInputElement = e.target().unwrap().dyn_into().unwrap();
-      unsafe { super::ch5_7_0_tunnel_scintillation.mipmap_enabled = checkbox.checked(); }
+      mipmap_enabled.set(checkbox.checked());
+      for tex in &texs {
+        gl.bind_texture(gl::TEXTURE_2D, tex.as_ref());
+        gl.tex_parameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, if checkbox.checked() { gl::LINEAR_MIPMAP_LINEAR } else { gl::LINEAR } as _);
+      }
     }) as Box<dyn FnMut(_)>);
 
     checkbox.add_event_listener_with_callback("change", closure.as_ref().unchecked_ref()).unwrap();
-
     closure.forget();
   }
 
