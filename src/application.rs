@@ -1,9 +1,8 @@
-use std::rc::Rc;
+use std::{rc::Rc, cell::Cell};
 use std::cell::RefCell;
 
-// if app are running, its address in this list
-
 use wasm_bindgen::{prelude::Closure, JsCast};
+
 
 #[derive(Debug, Clone, Copy)]
 pub struct AppConfig {
@@ -20,10 +19,10 @@ impl Default for AppConfig {
   }
 }
 
-fn request_animation_frame(f: &Closure<dyn FnMut()>) {
+fn request_animation_frame(f: &Closure<dyn FnMut()>) -> i32 {
   web_sys::window().unwrap()
                    .request_animation_frame(f.as_ref().unchecked_ref())
-                   .expect("should register `requestAnimationFrame` OK");
+                   .expect("should register `requestAnimationFrame` OK")
 }
 
 pub trait Application: 'static {
@@ -110,27 +109,33 @@ pub trait Application: 'static {
     let f = Rc::new(RefCell::new(None));
     let g = f.clone();
 
+    let req_id = Rc::new(Cell::new(0));
+
     // let _app = app.clone();
     let _gl = gl.clone();
+    let _app_elem = app_elem.clone();
+    let _req_id = req_id.clone();
 
     let render = move || {
       if app_elem.dataset().get("closed").is_some() {
         self.shutdown(&gl);
-        web_sys::console::log_1(&"closing.....".into());
         app_elem.dataset().delete("closed");
+
+        web_sys::window().unwrap().cancel_animation_frame(_req_id.get()).unwrap();
+
+        let _ = f.take();
         return;
       }
 
       self.render(&_gl.clone(), performance.now() / 1000.0);
 
-      // Schedule ourself for another requestAnimationFrame callback.
-      request_animation_frame(f.borrow().as_ref().unwrap());
+      _req_id.set(request_animation_frame(f.borrow().as_ref().unwrap())); 
     };
     
     let closure = Closure::wrap(Box::new(render) as Box<dyn FnMut()>);
     *g.borrow_mut() = Some(closure);
 
-    request_animation_frame(g.borrow().as_ref().unwrap());
+    req_id.set(request_animation_frame(g.borrow().as_ref().unwrap()));
   }
 
   fn startup(&mut self, _gl: &web_sys::WebGl2RenderingContext)

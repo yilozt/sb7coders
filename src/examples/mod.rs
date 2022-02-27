@@ -1,4 +1,5 @@
 use crate::application::*;
+use crate::prelude::log;
 use wasm_bindgen::prelude::wasm_bindgen;
 
 macro_rules! def_exam {
@@ -16,6 +17,12 @@ macro_rules! def_exam {
       }
       pub fn stop(id: Option<String>) {
         $mod::App::close_app(id);
+      }
+    }
+
+    impl Drop for $mod::App {
+      fn drop(&mut self) {
+        log!("== drop {} ==", stringify!($mod));
       }
     }
   };
