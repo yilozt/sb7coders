@@ -22,6 +22,7 @@ pub mod prelude {
   pub use web_sys::WebGlShader;
   pub use web_sys::WebGlVertexArrayObject;
   pub use web_sys::WebGlTexture;
+  pub use web_sys::WebGlSampler;
 
   pub use web_sys::console::log_1;
 
