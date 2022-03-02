@@ -29,11 +29,11 @@ macro_rules! def_exam {
 }
 
 
-def_exam!(default,                      _default);
+// def_exam!(default,                      _default);
 
 // CH 3
-def_exam!(ch3_1_vertexattr,             _ch3_1_vertexattr);
-def_exam!(ch3_2_transdata,              _ch3_2_transdata);
+// def_exam!(ch3_1_vertexattr,             _ch3_1_vertexattr);
+// def_exam!(ch3_2_transdata,              _ch3_2_transdata);
 
 // CH5
 def_exam!(ch5_1_vao,                    _ch5_1_vao);
@@ -42,6 +42,7 @@ def_exam!(ch5_1_1_atom_counter,         _ch5_1_1_atom_counter);
 def_exam!(ch5_2_spinningcube,           _ch5_2_spinningcube);
 def_exam!(ch5_3_spinningcubes,          _ch5_3_spinningcubes);
 def_exam!(ch5_4_simpletexture,          _ch5_4_simpletexture);
+def_exam!(ch_5_4_0_load_png,            _ch5_4_0_load_png);
 def_exam!(ch5_5_simpletexcoords,        _ch5_5_simpletexcoords);
 def_exam!(ch5_6_texturefilter,          _ch5_6_texturefilter);
 def_exam!(ch5_7_tunnel,                 _ch5_7_tunnel);
