@@ -29,11 +29,11 @@ macro_rules! def_exam {
 }
 
 
-// def_exam!(default,                      _default);
+def_exam!(default,                      _default);
 
-// // CH 3
-// def_exam!(ch3_1_vertexattr,             _ch3_1_vertexattr);
-// def_exam!(ch3_2_transdata,              _ch3_2_transdata);
+// CH 3
+def_exam!(ch3_1_vertexattr,             _ch3_1_vertexattr);
+def_exam!(ch3_2_transdata,              _ch3_2_transdata);
 
 // CH5
 def_exam!(ch5_1_vao,                    _ch5_1_vao);
