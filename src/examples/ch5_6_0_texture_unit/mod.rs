@@ -165,7 +165,7 @@ impl Application for App {
     let t = current_time as f32 * 40.0;
     let AppConfig { width, height, .. } = self.info();
     let trans = perspective(45.0, width as f32 / height as f32, 0.1, 1000.0)
-      * translate(0.0, 0.0, -3.5)
+      * translate(0.0, 0.0, -2.5)
       * rotate(t, t, t);
 
     gl.uniform_matrix4fv_with_f32_sequence(self.uniform_trans.as_ref(), false, & unsafe { js_sys::Float32Array::view_mut_raw(addr_of!(trans) as _, 16).into()});
