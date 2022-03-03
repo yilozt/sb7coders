@@ -177,4 +177,16 @@ impl Application for App {
 
     gl.draw_arrays(gl::TRIANGLES, 0, 36);
   }
+
+  fn shutdown(&mut self, gl: &gl) {
+    gl.delete_vertex_array(self.vao.as_ref());
+    gl.delete_buffer(self.vbo.as_ref());
+    gl.delete_program(self.prog.as_ref());
+    for i in &self.samplers {
+      gl.delete_sampler(i.as_ref());
+    }
+    for i in &self.texs {
+      gl.delete_texture(i.as_ref());
+    }
+  }
 }
