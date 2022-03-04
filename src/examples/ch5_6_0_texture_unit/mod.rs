@@ -188,5 +188,7 @@ impl Application for App {
     for i in &self.texs {
       gl.delete_texture(i.as_ref());
     }
+
+    gl.active_texture(gl::TEXTURE0);
   }
 }
