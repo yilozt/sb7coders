@@ -42,17 +42,6 @@ impl App {
         }
 
         unsafe {
-            let vs = sb7::shader::load(
-                "media/shaders/subroutines/subroutines.vs.glsl",
-                gl::VERTEX_SHADER,
-                true,
-            );
-            let fs = sb7::shader::load(
-                "media/shaders/subroutines/subroutines.fs.glsl",
-                gl::FRAGMENT_SHADER,
-                true,
-            );
-
             self.render_program = gl::CreateProgram();
             gl::ProgramParameteri(
                 self.render_program,
@@ -81,6 +70,16 @@ impl App {
                 // gl::LinkProgram(self.render_program);
             } else {
                 // compile form source
+                let vs = sb7::shader::load(
+                    "media/shaders/subroutines/subroutines.vs.glsl",
+                    gl::VERTEX_SHADER,
+                    true,
+                );
+                let fs = sb7::shader::load(
+                    "media/shaders/subroutines/subroutines.fs.glsl",
+                    gl::FRAGMENT_SHADER,
+                    true,
+                );
 
                 gl::AttachShader(self.render_program, vs);
                 gl::AttachShader(self.render_program, fs);
