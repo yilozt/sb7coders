@@ -30,7 +30,8 @@ pub mod prelude {
   pub use imgui_glfw_rs::imgui;
   
   pub use gl::*;
-
+  pub use gl::types::*;
+  
   pub use std::mem::size_of;
   pub use std::mem::size_of_val;
   pub use std::ptr::null;

@@ -151,6 +151,7 @@ impl<T> TVec3<T> {
 
 pub type Vec3 = TVec3<f32>;
 pub type Vec4 = TVec4<f32>;
+pub type IVec4 = TVec4<i32>;
 
 #[macro_export]
 macro_rules! vec3 {
@@ -161,6 +162,10 @@ macro_rules! vec3 {
 }
 #[macro_export]
 macro_rules! vec4 {
+  ($x: expr) => ({
+    let a = $crate::vmath::TVec4::new([$x, $x, $x, $x]);
+    a
+  });
   ($($x:expr),+ $(,)?) => ({
     let a = $crate::vmath::TVec4::new([$($x),+]);
     a
