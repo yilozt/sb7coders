@@ -25,7 +25,7 @@ use sb7::prelude::*;
 struct TessModesApp {
     program_index: usize,
     vao: GLuint,
-    program: [GLuint; 4],
+    program: [GLuint; 3],
 }
 
 impl Application for TessModesApp {
