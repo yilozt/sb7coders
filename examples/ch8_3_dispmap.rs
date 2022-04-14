@@ -220,6 +220,13 @@ impl Application for DismapApp {
     }
 
     fn on_key(&mut self, key: glfw::Key, press: glfw::Action) {
+        if let glfw::Action::Repeat = press {
+            match key {
+                glfw::Key::KpAdd => self.dmap_depth += 0.1,
+                glfw::Key::KpSubtract => self.dmap_depth -= 0.1,
+                _ => {}
+            }
+        }
         if let glfw::Action::Press = press {
             match key {
                 glfw::Key::KpAdd => self.dmap_depth += 0.1,
@@ -231,6 +238,27 @@ impl Application for DismapApp {
                 glfw::Key::R => self.load_shaders(),
                 _ => {}
             }
+        }
+    }
+
+    fn ui(&mut self, ui: &imgui::Ui) {
+        if let Some(win) = imgui::Window::new("Help")
+            .position([10.0, 10.0], imgui::Condition::Once)
+            .begin(ui)
+        {
+            ui.text(format!(
+                "(NumAdd / NumSubtract) dmap_depth: {:.2}",
+                self.dmap_depth
+            ));
+            ui.text(format!("(F) enable_fog: {}", self.enable_fog));
+            ui.text(format!(
+                "(D) enable_displacement: {}",
+                self.enable_displacement
+            ));
+            ui.text(format!("(W) wireframe: {}", self.wireframe));
+            ui.text(format!("(P) paused: {}", self.paused));
+
+            win.end();
         }
     }
 }
