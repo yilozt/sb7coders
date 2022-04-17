@@ -16,4 +16,4 @@ git = "https://github.com/yilozt/imgui-glfw-rs"
 
 [[bin]]
 name = "test"
-path = "test.rs"
+path = "my_test/test.rs"
