@@ -12,6 +12,7 @@ pub struct AppConfig {
     pub height: usize,
     pub flags: AppFlags,
     pub glfw: glfw::Glfw,
+    pub samples: u32,
 }
 
 #[derive(Default, Debug, Clone)]
@@ -32,6 +33,7 @@ impl Default for AppConfig {
             height: 600,
             flags: Default::default(),
             glfw: glfw::init(glfw::FAIL_ON_ERRORS).unwrap(),
+            samples: 0,
         }
     }
 }
@@ -62,6 +64,7 @@ pub trait Application {
             glfw::OpenGlProfileHint::Core,
         ));
         glfw.window_hint(glfw::WindowHint::Stereo(info.flags.stereo));
+        glfw.window_hint(glfw::WindowHint::Samples(Some(info.samples)));
 
         let (mut window, events) = glfw
             .clone()
