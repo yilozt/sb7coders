@@ -256,7 +256,7 @@ impl Application for SpringMassApp {
         }
     }
 
-    fn render(&self, _current_time: f64) {
+    fn render(&mut self, _current_time: f64) {
         unsafe {
             gl::UseProgram(self.m_update_program);
 

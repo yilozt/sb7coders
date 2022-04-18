@@ -105,7 +105,7 @@ impl Application for MyApplication {
     }
   }
 
-  fn render(&self, current_time: f64) {
+  fn render(&mut self, current_time: f64) {
     gl! {
       let g = (current_time as f32).sin() * 0.5 + 0.5;
       gl::ClearBufferfv(gl::COLOR, 0, &[g, g, g, 1.0f32] as *const f32);

@@ -137,7 +137,7 @@ impl Application for App {
     self.on_resize(width as _, height as _);
   }
 
-  fn render(&self, current_time: f64) {
+  fn render(&mut self, current_time: f64) {
     sb7::gl! {
       gl::ClearBufferfv(gl::COLOR,0, [0.0, 0.0, 0.0].as_ptr());
       gl::ClearBufferfv(gl::DEPTH, 0, &1.0);

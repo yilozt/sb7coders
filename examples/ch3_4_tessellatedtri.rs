@@ -118,7 +118,7 @@ impl Application for MyApplication {
     }
   }
 
-  fn render(&self, _current_time: f64) {
+  fn render(&mut self, _current_time: f64) {
     sb7::gl! {
       gl::ClearBufferfv(gl::COLOR, 0, [0.0, 0.25, 0.0, 1.0f32].as_ptr());
 

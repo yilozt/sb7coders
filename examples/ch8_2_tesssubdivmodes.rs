@@ -197,7 +197,7 @@ impl Application for TessModesApp {
         }
     }
 
-    fn render(&self, _current_time: f64) {
+    fn render(&mut self, _current_time: f64) {
         unsafe {
             gl::ClearBufferfv(gl::COLOR, 0, color::Black.as_ptr());
 

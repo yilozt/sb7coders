@@ -99,7 +99,7 @@ impl Application for App {
     }
   }
 
-  fn render(&self, current_time: f64) {
+  fn render(&mut self, current_time: f64) {
     let f = current_time as f32;
 
     gl! {

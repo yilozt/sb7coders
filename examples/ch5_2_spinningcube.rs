@@ -137,7 +137,7 @@ impl Application for App {
     self.on_resize(width as _, height as _);
   }
 
-  fn render(&self, current_time: f64) {
+  fn render(&mut self, current_time: f64) {
     sb7::gl! {
       let current_time = current_time as f32;
       let f = current_time * 0.3;

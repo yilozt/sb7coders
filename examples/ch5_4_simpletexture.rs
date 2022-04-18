@@ -129,7 +129,7 @@ impl Application for App {
     }
   }
 
-  fn render(&self, _current_time: f64) {
+  fn render(&mut self, _current_time: f64) {
     gl! {
       ClearBufferfv(COLOR, 0, [0.0f32, 0.25, 0.0, 1.0].as_ptr());
       DrawArrays(TRIANGLES, 0, 3);

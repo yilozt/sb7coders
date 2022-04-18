@@ -108,7 +108,7 @@ impl Application for CubicbezierApp {
         }
     }
 
-    fn render(&self, current_time: f64) {
+    fn render(&mut self, current_time: f64) {
         unsafe {
             let gray = [0.1f32, 0.1, 0.1, 0.1];
             let one = 1.0f32;

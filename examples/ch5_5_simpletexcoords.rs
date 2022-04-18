@@ -95,7 +95,7 @@ impl Application for App {
     self.on_resize(width as _, height as _);
   }
 
-  fn render(&self, current_time: f64) {
+  fn render(&mut self, current_time: f64) {
     let grey = [0.2, 0.2, 0.2, 1.0f32].as_ptr();
     let ones = [1.0f32].as_ptr();
 

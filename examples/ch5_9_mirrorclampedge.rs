@@ -68,7 +68,7 @@ impl Application for App {
     gl!(GenVertexArrays(1, &mut self.vao));
   }
 
-  fn render(&self, _current_time: f64) {
+  fn render(&mut self, _current_time: f64) {
     gl! {
       ClearBufferfv(COLOR, 0, color::Black.as_ptr());
 

@@ -57,17 +57,27 @@ pub trait Application {
 
         let glfw = &mut info.glfw;
         glfw.window_hint(glfw::WindowHint::ContextVersion(4, 6));
+        glfw.window_hint(glfw::WindowHint::OpenGlForwardCompat(true));
         glfw.window_hint(glfw::WindowHint::OpenGlProfile(
             glfw::OpenGlProfileHint::Core,
         ));
+        glfw.window_hint(glfw::WindowHint::Stereo(info.flags.stereo));
 
         let (mut window, events) = glfw
-            .create_window(
-                info.width as u32,
-                info.height as u32,
-                &info.title,
-                glfw::WindowMode::Windowed,
-            )
+            .clone()
+            .with_primary_monitor(|_, m| {
+                glfw.create_window(
+                    info.width as u32,
+                    info.height as u32,
+                    &info.title,
+                    match info.flags.fullscreen {
+                        true => m.map_or(glfw::WindowMode::Windowed, |m| {
+                            glfw::WindowMode::FullScreen(m)
+                        }),
+                        false => glfw::WindowMode::Windowed,
+                    },
+                )
+            })
             .expect("Failed to create GLFW window.");
 
         gl::load_with(|s| window.get_proc_address(s));
@@ -107,7 +117,7 @@ pub trait Application {
     }
 
     fn startup(&mut self) {}
-    fn render(&self, current_time: f64) {
+    fn render(&mut self, current_time: f64) {
         super::gl! {
           let g = (current_time.sin() * 0.5 + 0.5) as f32;
           gl::ClearBufferfv(gl::COLOR, 0, [g, g, g, 1.0f32].as_ptr());

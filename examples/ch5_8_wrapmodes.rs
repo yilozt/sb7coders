@@ -85,7 +85,7 @@ impl Application for App {
     }
   }
 
-  fn render(&self, _: f64) {
+  fn render(&mut self, _: f64) {
     let green = [0.0, 0.1, 0.0, 1.0f32].as_ptr();
     let yellow = [0.4, 0.4, 0.0, 1.0f32].as_ptr();
 

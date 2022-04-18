@@ -215,7 +215,7 @@ impl Application for App {
         }
     }
 
-    fn render(&self, current_time: f64) {
+    fn render(&mut self, current_time: f64) {
         unsafe {
             let t = (current_time * 0.02) as f32;
             let r = 550f32;

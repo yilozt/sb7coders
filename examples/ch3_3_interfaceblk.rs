@@ -84,7 +84,7 @@ impl Application for MyApp {
     }
   }
 
-  fn render(&self, _current_time: f64) {
+  fn render(&mut self, _current_time: f64) {
     let color = [0.0, 0.0, 0.0, 0.0];
     sb7::gl! {
       gl::ClearBufferfv(gl::COLOR, 0, color.as_ptr());

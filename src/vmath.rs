@@ -230,6 +230,11 @@ where
     }
     mat
   }
+
+  #[inline(always)]
+  pub fn from_vec(a: [VecN<T, H>; W]) -> Self {
+    Self { a }
+  }
 }
 
 impl<T, const W: usize, const H: usize> From<&[T]> for MatNM<T, W, H>

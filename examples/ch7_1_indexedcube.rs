@@ -170,7 +170,7 @@ impl Application for App {
         }
     }
 
-    fn render(&self, current_time: f64) {
+    fn render(&mut self, current_time: f64) {
         let green = [0.0, 0.25, 0.0, 1.0f32].as_ptr();
         let one = 1.0f32;
 

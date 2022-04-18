@@ -170,7 +170,7 @@ impl Application for BlendMatrixApp {
         }
     }
 
-    fn render(&self, current_time: f64) {
+    fn render(&mut self, current_time: f64) {
         let orange = [0.6, 0.4, 0.1, 1.0f32].as_ptr();
         let one = 1.0f32;
         let t = current_time as f32;

@@ -79,7 +79,7 @@ impl application::Application for MyApp {
     }
   }
 
-  fn render(&self, current_time: f64) {
+  fn render(&mut self, current_time: f64) {
     let current_time = current_time as f32;
     let green = [0.0, 0.0, 0.0, 0.0f32];
     let attrib = [current_time.sin() * 0.5, current_time.cos() * 0.6, 0.0, 0.0];

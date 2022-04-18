@@ -120,7 +120,7 @@ impl Application for DepthclampApp {
         }
     }
 
-    fn render(&self, current_time: f64) {
+    fn render(&mut self, current_time: f64) {
         let black = [0.0, 0.0, 0.0, 1.0f32].as_ptr();
         let one = 1.0f32;
         let f = current_time as f32;

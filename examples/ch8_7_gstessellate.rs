@@ -226,7 +226,7 @@ impl Application for GsTessellateApp {
         }
     }
 
-    fn render(&self, current_time: f64) {
+    fn render(&mut self, current_time: f64) {
         let black = [0.0, 0.0, 0.0, 0.0f32];
         let one = 1.0f32;
         let f = current_time as f32;
