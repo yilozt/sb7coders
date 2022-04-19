@@ -214,7 +214,7 @@ impl Application for SamplesShadingApp {
                     }
                 }
                 false => {
-                    let f = current_time * 0.3;
+                    // let f = current_time * 0.3;
                     let mv_matrix = translate(0.0, 0.0, -2.0) *
                                     /* translate((2.1 * f).sin() * 0.5,
                                               (1.7 * f).cos() * 0.5,
