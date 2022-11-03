@@ -108,7 +108,7 @@ impl App {
                 // save to file
                 println!("saving program to cache.bin");
                 let mut file = std::fs::File::create("cache.bin").unwrap();
-                file.write_all(&format.to_le_bytes()).unwrap();
+                file.write_all(&u32::to_le_bytes(format)).unwrap();
                 file.write_all(&buf).unwrap();
             }
         }
