@@ -55,10 +55,10 @@ impl App {
 
                 let mut format = [0u8; 4];
                 let mut data = Vec::new();
-                file.read(&mut format).unwrap();
+                file.read_exact(&mut format).unwrap();
                 file.read_to_end(&mut data).unwrap();
 
-                let format = u32::from_ne_bytes(format);
+                let format = u32::from_le_bytes(format);
                 gl::ProgramBinary(
                     self.render_program,
                     format,
@@ -108,8 +108,8 @@ impl App {
                 // save to file
                 println!("saving program to cache.bin");
                 let mut file = std::fs::File::create("cache.bin").unwrap();
-                file.write(&format.to_ne_bytes()).unwrap();
-                file.write(&buf).unwrap();
+                file.write_all(&u32::to_le_bytes(format)).unwrap();
+                file.write_all(&buf).unwrap();
             }
         }
 
